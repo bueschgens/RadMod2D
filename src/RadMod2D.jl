@@ -1,6 +1,5 @@
 module RadMod2D
 
-
     # julia packages
     using DelimitedFiles
     using StaticArrays
@@ -28,6 +27,7 @@ module RadMod2D
     export create_tiles, check_tile_occupation
     export blocking_vf_with_tiles!
     export calculating_vf!
+    export get_area_of_part
     export vfmat_to_parts
     # 2 elems
     export existing_vf_2elem
@@ -35,6 +35,7 @@ module RadMod2D
     export blocking_vf_with_tiles_2elem_tiles
 
     include("./therm2D.jl")
+    export sigma
     export set_bc_part!
     export tempsolver
     
