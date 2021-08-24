@@ -56,13 +56,13 @@ function plot_model(fig, ax, m::Model; shownvec = false, shownodes = false, show
     end
 end
 
-function plot_model_elements(fig, ax, m::Model, erange; shownvec = false, shownodes = false, showcom = false, color = :cyan, linewidth = 3.0)
+function plot_model_elements(fig, ax, m::Model, erange; shownvec = false, shownodes = false, showcom = false, color = :cyan, linewidth = 3.0, linestyle = nothing)
     # plot only given elements
     # color = :cyan
     # plot elements
     elem_lines = [Point2f0(m.nodes[m.elem[i].node1].x, m.nodes[m.elem[i].node1].y) => 
                 Point2f0(m.nodes[m.elem[i].node2].x, m.nodes[m.elem[i].node2].y) for i in erange]
-    plt_elem = linesegments!(ax, elem_lines, color = color, linewidth = linewidth)
+    plt_elem = linesegments!(ax, elem_lines, color = color, linewidth = linewidth, linestyle = linestyle)
     # plot nodes
     if shownodes == true
         local nodes_points = [Point2f0(m.nodes[m.elem[i].node1].x, m.nodes[m.elem[i].node1].y) for i in erange]
@@ -268,4 +268,23 @@ function plot_model_with_value(fig, ax, m::Model, val::Vector{T}, val_label; par
     # cbar.ticks = valmin:valdelta:valmax
     println("values between: ", valmin, " and ", valmax)
     return cbar
+end
+
+#= ######################################################
+others - plotting functions
+###################################################### =#
+
+function setup_axis(ax, linewidth)
+    # for springer heat and mass transfer
+    ax.spinewidth = linewidth
+    ax.xtickwidth = linewidth
+    ax.ytickwidth = linewidth
+    ax.xgridwidth = linewidth
+    ax.ygridwidth = linewidth
+    ax.xlabelpadding = 0.0 # default 3.0
+    ax.ylabelpadding = 0.0
+    ax.xticklabelpad = 0.0 # default 2.0
+    ax.yticklabelpad = 1.5
+    ax.xticksize = 2.0 # default 6.0
+    ax.yticksize = 2.0
 end
