@@ -9,6 +9,7 @@ module RadMod2D
 
     include("./mesh2D.jl")
     export ModelRaw, Model
+    export norm
     export create_empty_model
     export add!, offset_model!
     export make_model_immutable
