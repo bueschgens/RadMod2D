@@ -3,7 +3,7 @@ Exemplary models
 ###################################################### =# 
 
 function model_two_intesecting_circles(d, seed, leftout)
-    # double open circle case
+    # two intersecting circles
     m = create_empty_model()
     center1 = Point2D(4,3)
     add!(m, circle_open(d, center1, seed = seed, leftout = leftout, open = "right", dir = "pos"))
@@ -17,7 +17,7 @@ function model_two_intesecting_circles(d, seed, leftout)
 end
 
 function model_rectangle(a, b, elemsize)
-    # double open circle case
+    # single rectangle
     m = create_empty_model()
     seeda = round(Integer,a/elemsize)
     seedb = round(Integer,b/elemsize)
@@ -33,7 +33,7 @@ function model_rectangle(a, b, elemsize)
 end
 
 function model_circle_in_circle(d_in, d_out, elemsize)
-    # double open circle case
+    # circle in circle
     m = create_empty_model()
     seed_in = round(Integer,(pi*d_in)/elemsize)
     seed_out = round(Integer,(pi*d_out)/elemsize)
@@ -47,7 +47,7 @@ function model_circle_in_circle(d_in, d_out, elemsize)
 end
 
 function model_circle_with_opening_line(d, seed, leftout)
-    # double open circle case
+    # open circle closed with line
     m = create_empty_model()
     center = Point2D(0.0,0.0)
     add!(m, circle_open(d, center, seed = seed, leftout = leftout, open = "right", dir = "pos"))
@@ -62,7 +62,7 @@ function model_circle_with_opening_line(d, seed, leftout)
 end
 
 function model_isosceles_triangle(a, alpha_deg, elemsize)
-    # double open circle case
+    # isocles triangle
     m = create_empty_model()
     alpha_rad = alpha_deg*pi/180
     point = Point2D(sin(alpha_rad) * a, cos(alpha_rad) * a)
@@ -80,7 +80,7 @@ function model_isosceles_triangle(a, alpha_deg, elemsize)
 end
 
 function model_two_rectangles_with_holes(elemsize)
-    # two rectangles connected with a hole
+    # two rectangles connected with a pinhole
     m = create_empty_model()
     l_spalt = 0.1
     x_offset = 0.01
@@ -130,7 +130,7 @@ function model_lines()
 end
 
 function model_cosinus(a, b, seed)
-    # two opposing lines
+    # cosinus
     m = create_empty_model()
     add!(m, cosinus(a, b, Point2D(0.0,0.0), seed = seed, dir = "pos"))
     elemsize = m.elem[1].area
@@ -383,7 +383,7 @@ function model_square_in_square(a, b, elemsize)
 end
 
 function model_rect_in_rect(r1x, r1y, r2x, r2y, elemsize)
-    # double open circle case
+    # rectangle in rectangle
     m = create_empty_model()
     center = Point2D(0.0,0.0)
     seedx = round(Integer,r1x/elemsize)
@@ -478,7 +478,7 @@ function model_circles_in_circle_rand(d_in, d_out, n, elemsize)
 end
 
 function model_circles_in_circle_rand_full(d_in, d_out, elemsize)
-    # circles in circle - distribution: random
+    # circles in circle - distribution: random case full
     m = create_empty_model()
     seed_in = round(Integer,(pi*d_in)/elemsize)
     seed_out = round(Integer,(pi*d_out)/elemsize)
@@ -511,7 +511,7 @@ function model_circles_in_circle_rand_full(d_in, d_out, elemsize)
 end
 
 function model_circles_in_circle_rand_half(d_in, d_out, elemsize)
-    # circles in circle - distribution: random
+    # circles in circle - distribution: random case half
     m = create_empty_model()
     seed_in = round(Integer,(pi*d_in)/elemsize)
     seed_out = round(Integer,(pi*d_out)/elemsize)
@@ -544,7 +544,7 @@ function model_circles_in_circle_rand_half(d_in, d_out, elemsize)
 end
 
 function model_circles_in_circle_rand_quarter(d_in, d_out, elemsize)
-    # circles in circle - distribution: random
+    # circles in circle - distribution: random case quarter
     m = create_empty_model()
     seed_in = round(Integer,(pi*d_in)/elemsize)
     seed_out = round(Integer,(pi*d_out)/elemsize)

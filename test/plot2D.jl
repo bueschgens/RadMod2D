@@ -2,7 +2,7 @@
 model2D - plotting functions
 ###################################################### =# 
 
-function plot_model(fig, ax, m::Model; shownvec = false, shownodes = false, showcom = false, showleg = true, colors = to_colormap(:rainbow, m.npar), linewidth = 3.0)
+function plot_model(fig, ax, m::Model; shownvec = false, shownodes = false, showcom = false, showleg = true, colors = to_colormap(:rainbow, m.npar), linewidth = 3.0, legpos = "bottom")
     # plot model
     elem_lines = Vector(undef,m.npar)
     plt_elem = Vector(undef,m.npar)
@@ -45,8 +45,11 @@ function plot_model(fig, ax, m::Model; shownvec = false, shownodes = false, show
     # legend
     if showleg == true
         leg_string = ["part $i" for i = 1:m.npar]
-        # leg = fig[1, end+1] = Legend(fig, plt_elem, leg_string)
-        leg = fig[end+1, 1] = Legend(fig, plt_elem, leg_string, orientation = :horizontal, tellwidth = false, tellheight = true)
+        if legpos == "right"
+            leg = fig[1, end+1] = Legend(fig, plt_elem, leg_string)
+        elseif legpos == "bottom"
+            leg = fig[end+1, 1] = Legend(fig, plt_elem, leg_string, orientation = :horizontal, tellwidth = false, tellheight = true)
+        end
         leg.padding = (5.0f0, 5.0f0, 4.0f0, 4.0f0)
         leg.linewidth = 1.0
         leg.patchsize = (5, 3)
@@ -226,7 +229,7 @@ end
 therm2D - plotting functions
 ###################################################### =#
 
-function plot_model_with_value(fig, ax, m::Model, val::Vector{T}, val_label; parts = 1:m.npar, cmap = :jet, linewidth = 5.0, showcbar = true) where T<:AbstractFloat
+function plot_model_with_value(fig, ax, m::Model, val::Vector{T}, val_label; parts = 1:m.npar, cmap = :jet, linewidth = 5.0, showcbar = true, cbarpos = "right") where T<:AbstractFloat
     # plot specified parts of model with their values in global colormap
     n = 0
     for p in parts
@@ -252,8 +255,12 @@ function plot_model_with_value(fig, ax, m::Model, val::Vector{T}, val_label; par
     # plt_elem = linesegments!(ax, elem_lines, color = val, colormap = :viridis, linewidth = 3)
     # colorbar
     if showcbar == true
-        # cbar = fig[1, end+1] = Colorbar(fig, plt_elem, label = val_label)
-        cbar = fig[end+1, 1] = Colorbar(fig, plt_elem, label = val_label)
+        if cbarpos == "right"
+            cbar = fig[1, end+1] = Colorbar(fig, plt_elem, label = val_label)
+        elseif cbarpos == "bottom"
+            cbar = fig[end+1,1] = Colorbar(fig, plt_elem, label = val_label)
+            cbar.vertical = false
+        end
         # cbar.width = 12
         # cbar.height = Relative(2/3)
         # cbar.labelpadding = 1.0 # default 5.0
