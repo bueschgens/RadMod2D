@@ -12,6 +12,7 @@ deps/build.log
 deps/downloads/
 deps/usr/
 deps/src/
+img/
 *.png
 *.svg
 
