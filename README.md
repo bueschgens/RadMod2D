@@ -6,6 +6,18 @@ RadMod2D provides a model for calculating view factors of arbitrary two-dimensio
 
 With a set of basic tools like edges, circles etc arbitrary two dimensional geometries can be build and discretized. Complex geometries can be build externally and transfered into the model format. The view factor matrix for the model's elements get calculated with the area integration method and newly developed blocking algorithm. After applying boundary conditions for each element the heat fluxes due to radiation exchange can be calculated.
 
+## Archived development status of paper submission
+
+This is the archived development status of RadMod2D at submission of the paper.
+Example and validation cases are presented in the following scripts:
+
+- `test/run_cyl_in_cyl.jl` (chapter 3 and 4.1)
+- `test/run_epseff_groove.jl` (chapter 4.2)
+- `test/run_bf_vs_algo.jl` (chapter 4.3)
+- `test/run_pinhole.jl` (chapter 4.4)
+- `test/run_corridor.jl` (chapter 4.5)
+
+_Future developments can lead to different results._
 ## Setup and Usage
 
 RadMod2D is written in the [Julia programming language](https://julialang.org/).
