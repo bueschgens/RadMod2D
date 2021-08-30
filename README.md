@@ -49,6 +49,8 @@ elemsize = 0.05 # element size used for discretization
 m = model_rect_in_rect(r1x, r1y, r2x, r2y, elemsize)
 ```
 
+<img src="img/fig_rect_in_rect_mesh2D.png" alt="mesh" width="400"/>
+
 The view factors for the discretized geometry get calculated with:
 ```julia
 vfmat = zeros(Float64, m.nelem, m.nelem)
@@ -76,5 +78,6 @@ With the areas of the elements the heat flux density can be determined:
 area = [m.elem[i].area for i = m.elem2par[1].first:m.elem2par[end].last]
 q = Q[:] ./ area[:]
 ```
+<img src="img/fig_rect_in_rect_q2D.png" alt="heat-flux-density" width="400"/>
 
-For plotting `test/plot2D.jl` can be used as presented in `test/run_example2.jl`.
+The plots are made with a plotting toolbox available at `test/plot2D.jl`. The examples are presented in in `test/run_example2.jl`.
