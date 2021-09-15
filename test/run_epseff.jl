@@ -2,16 +2,16 @@ using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
 
-
 using RadMod2D
-using DelimitedFiles
 
-using GLMakie
-# using CairoMakie
+include("./cases_epseff.jl")
 
-include("./epseff2D.jl")
+# epsilon_effective_round_groove()
+# epsilon_effective_v_groove()
+# epsilon_effective_square_groove()
+# epsilon_effective_elbow_piece()
+# epsilon_effective_trapez()
+epsilon_effective_cosinus()
 
-# epsilon_effective_keilspalt()
-epsilon_effective_rundrille()
 
 # include("./test/run_epseff.jl")
