@@ -25,11 +25,13 @@ module RadMod2D
     include("./view2D.jl")
     export existing_vf!
     export blocking_vf!
-    export create_tiles, check_tile_occupation
+    export create_tiles, check_tile_occupation, check_tile_occupation_parts
     export blocking_vf_with_tiles!
+    export blocking_vf_with_tiles_simplified!
     export calculating_vf!
     export get_area_of_part
     export vfmat_to_parts
+    export tile_occ_analysis
     # 2 elems
     export existing_vf_2elem
     export blocking_vf_with_tiles_2elem

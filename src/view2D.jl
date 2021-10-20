@@ -222,6 +222,38 @@ function check_tile_occupation(m::Model, dx::T1, dy::T1, n::T2)::Matrix{Union{Ve
     return t_occ
 end
 
+function check_tile_occupation_parts(m::Model, dx::T1, dy::T1, n::T2; blockparts = 1:m.npar)::Matrix{Union{Vector{T2},Missing}} where {T1<:AbstractFloat, T2<:Integer}
+    # tile sorting
+    t_occ = Matrix{Union{Vector{T2},Missing}}(missing,n,n)
+    e_in_tile = Vector{T2}(undef,m.nelem) # empty vec for appending
+    for t1 = 1:n
+        for t2 = 1:n
+            tmin_x = dx*(t1-1)
+            tmax_x = dx*t1
+            tmin_y = dy*(t2-1)
+            tmax_y = dy*t2
+            hit = 0
+            for p in blockparts
+                e1 = m.elem2par[p].first
+                e2 = m.elem2par[p].last
+                for i = e1:e2
+                    node1 = m.nodes[m.elem[i].node1]
+                    node2 = m.nodes[m.elem[i].node2]
+                    if is_inside_tile_BB(node1, node2, tmin_x, tmax_x, tmin_y, tmax_y)
+                        # println("tile (",t1,",",t2,") --> ",i)
+                        hit += 1
+                        e_in_tile[hit] = i
+                    end
+                end
+            end
+            if hit > 0
+                t_occ[t1,t2] = e_in_tile[1:hit]
+            end
+        end
+    end
+    return t_occ
+end
+
 function blocking_vf_with_tiles!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}) where {T1<:AbstractFloat, T2<:Integer}
     # check if element pairs are blocked by others with tiles
     max_steps = get_max_steps(n)
@@ -261,6 +293,59 @@ function blocking_vf_with_tiles!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Ma
             end
         end
     end
+end
+
+function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}; elem_in_t = 12, skipped_t = 2) where {T1<:AbstractFloat, T2<:Integer}
+    # check if element pairs are blocked by others with tiles
+    max_steps = get_max_steps(n)
+    tiles = Vector{Index2D{T2}}(undef,max_steps)
+    count_simp = 0
+    count_all = 0
+    @inbounds for i1 = 1:m.nelem, i2 = (i1+1):m.nelem
+        # println("--------> checking ",i1," and ",i2)
+        p1 = m.elem[i1].com
+        p2 = m.elem[i2].com
+        if mat[i1,i2] == 1
+            # first tilewalk and get all tiles between i1 and i2
+            ntiles = tilewalk_with_return!(tiles, p1, p2, dx, dy, n)
+            hitten = false
+            @inbounds for i = 1:ntiles
+                t = tiles[i]
+                # println("next tile number: ", t.x, ", ", t.y)
+                if !ismissing(t_occ[t.x,t.y])
+                    # println("------> occupied ")
+                    count_all += 1
+                    if size(t_occ[t.x,t.y],1) <= elem_in_t || i <= 1+skipped_t || i >= ntiles-skipped_t
+                        for it in t_occ[t.x,t.y]
+                            if it != i1 && it != i2
+                                # println("------> ",i1," and ",i2, " checking with ",it)
+                                p3 = m.nodes[m.elem[it].node1]
+                                p4 = m.nodes[m.elem[it].node2]
+                                blocked = line_segment_intersection(p1, p2, p3, p4)
+                                if blocked
+                                    # println("----------------> ",i1," and ",i2," intersected by ",it)
+                                    mat[i1,i2] = 0
+                                    mat[i2,i1] = 0
+                                    hitten = true
+                                    break
+                                end
+                            end
+                        end
+                    else
+                        # println("----------------> SIMPLIFIED -> ",i1," and ",i2," intersected by ",it)
+                        mat[i1,i2] = 0
+                        mat[i2,i1] = 0
+                        count_simp += 1
+                    end
+                end
+                if hitten
+                    break
+                end
+            end
+        end
+    end
+    # println("counter simp/all: ", count_simp, " / ", count_all)
+    println("simplification rate: ", round(count_simp/count_all*100, digits = 2), " %")
 end
 
 function calculating_vf!(m, mat; normit = false)

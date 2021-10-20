@@ -575,3 +575,33 @@ function model_circles_in_circle_rand_quarter(d_in, d_out, elemsize)
     println("model has ", mi.nelem, " elements")
     return mi
 end
+
+function model_line_to_line_with_obstacles(a, b, c, n, elemsize)
+    # line to line with line obstacles
+    # a - length of start and end line
+    # b - distance between start and end line
+    # c - distance between start and obstacle line
+    # n - number of obstacle lines
+    m = create_empty_model()
+    seeda = round(Integer,a/elemsize)
+    point1 = Point2D(0.0,0.0)
+    point2 = Point2D(a,0.0)
+    add!(m, edge(point1, point2, seed = seeda, dir = "pos"))
+    point1 = Point2D(0.0,b)
+    point2 = Point2D(a,b)
+    add!(m, edge(point1, point2, seed = seeda, dir = "neg"))
+    d = a / (2*n-1)
+    seedd = round(Integer,d/elemsize)
+    e = 0.0
+    for i = 1:n
+        point1 = Point2D(e,c)
+        e += d
+        point2 = Point2D(e,c)
+        add!(m, edge(point1, point2, seed = seedd, dir = "neg"))
+        e += d
+    end
+    offset_model!(m)
+    mi = make_model_immutable(m)
+    println("model has ", mi.nelem, " elements")
+    return mi
+end
