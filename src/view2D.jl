@@ -194,35 +194,7 @@ function create_tiles(m::Model, n::Integer)::Tuple{Float64,Float64}
     return dx, dy
 end
 
-function check_tile_occupation(m::Model, dx::T1, dy::T1, n::T2)::Matrix{Union{Vector{T2},Missing}} where {T1<:AbstractFloat, T2<:Integer}
-    # tile sorting
-    t_occ = Matrix{Union{Vector{T2},Missing}}(missing,n,n)
-    e_in_tile = Vector{T2}(undef,m.nelem) # empty vec for appending
-    for t1 = 1:n
-        for t2 = 1:n
-            tmin_x = dx*(t1-1)
-            tmax_x = dx*t1
-            tmin_y = dy*(t2-1)
-            tmax_y = dy*t2
-            hit = 0
-            for i = 1:m.nelem
-                node1 = m.nodes[m.elem[i].node1]
-                node2 = m.nodes[m.elem[i].node2]
-                if is_inside_tile_BB(node1, node2, tmin_x, tmax_x, tmin_y, tmax_y)
-                    # println("tile (",t1,",",t2,") --> ",i)
-                    hit += 1
-                    e_in_tile[hit] = i
-                end
-            end
-            if hit > 0
-                t_occ[t1,t2] = e_in_tile[1:hit]
-            end
-        end
-    end
-    return t_occ
-end
-
-function check_tile_occupation_parts(m::Model, dx::T1, dy::T1, n::T2; blockparts = 1:m.npar)::Matrix{Union{Vector{T2},Missing}} where {T1<:AbstractFloat, T2<:Integer}
+function check_tile_occupation(m::Model, dx::T1, dy::T1, n::T2; blockparts = 1:m.npar)::Matrix{Union{Vector{T2},Missing}} where {T1<:AbstractFloat, T2<:Integer}
     # tile sorting
     t_occ = Matrix{Union{Vector{T2},Missing}}(missing,n,n)
     e_in_tile = Vector{T2}(undef,m.nelem) # empty vec for appending

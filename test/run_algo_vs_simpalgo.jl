@@ -19,8 +19,7 @@ m = model_circles_in_circle_rand_quarter(0.1, 1.8, elemsize)
 
 # tiles
 dx, dy = create_tiles(m, n)
-# @time t_occ = check_tile_occupation(m, dx, dy, n)
-@time t_occ = check_tile_occupation_parts(m, dx, dy, n, blockparts = 1:(m.npar-1))
+@time t_occ = check_tile_occupation(m, dx, dy, n, blockparts = 1:(m.npar-1))
 tile_occ_analysis(t_occ, printit = true)
 
 println("elem size / tile size: ", round(elemsize/((dx+dy)/2), digits = 2), " %")
