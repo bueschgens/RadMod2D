@@ -267,7 +267,7 @@ function blocking_vf_with_tiles!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Ma
     end
 end
 
-function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}; elem_in_t = 12, skipped_t = 2) where {T1<:AbstractFloat, T2<:Integer}
+function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}; elem_in_t = 12::T2, skipped_t::T2 = 2) where {T1<:AbstractFloat, T2<:Integer}
     # check if element pairs are blocked by others with tiles
     max_steps = get_max_steps(n)
     tiles = Vector{Index2D{T2}}(undef,max_steps)
