@@ -41,7 +41,5 @@ module RadMod2D
     export sigma
     export set_bc_part!
     export tempsolver
-    
-
 
 end

@@ -74,9 +74,18 @@ function fig_pinhole_therm2D_eps(eps_lab)
     # display(fig)
     eps_save = replace(string(eps_lab),"." => "n")
     save("fig_c2_therm2D_eps"*eps_save*"_cb"*filetype, fig)
+    # for i = 1:m.nnodes
+    #     println(m.nodes[i].x, ";", m.nodes[i].y)
+    # end
+    # for i = 1:m.nelem
+    #     println(m.elem[i].node1, ";", m.elem[i].node2, ";", m.elem[i].com, ";", m.elem[i].nvec, ";", m.elem[i].area)
+    # end
+    # for i = 1:m.nelem
+    #     println(temp[i,:], ";", epsilon[i,:], ";", qp_area_kw_mod[i,:])
+    # end
 end
 
-fig_pinhole_therm2D_eps(0.5)
-# fig_pinhole_therm2D_eps(1.0)
+# fig_pinhole_therm2D_eps(0.5)
+fig_pinhole_therm2D_eps(1.0)
 
 # include("./test/run_pinhole.jl")

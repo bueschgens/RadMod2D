@@ -227,6 +227,15 @@ function fig_c1_therm2D_temp()
     # cbar.ticks = 300:100:600
     # display(fig)
     save("fig_c1_therm2D_temp"*filetype, fig)
+    # for i = 1:m.nnodes
+    #     println(m.nodes[i].x, ";", m.nodes[i].y)
+    # end
+    # for i = 1:m.nelem
+    #     println(m.elem[i].node1, ";", m.elem[i].node2, ";", m.elem[i].com, ";", m.elem[i].nvec, ";", m.elem[i].area)
+    # end
+    # for i = 1:m.nelem
+    #     println(temp[i,:])
+    # end
 end
 
 function fig_c1_therm2D_temp_legend()
@@ -292,6 +301,9 @@ function fig_c1_therm2D_qrad()
     # cbar.ticks = -80:20:60
     # display(fig)
     save("fig_c1_therm2D_qrad"*filetype, fig)
+    # for i = 1:m.nelem
+    #     println(qp_area[i,:])
+    # end
 end
 
 function fig_c1_therm2D_qrad_legend()

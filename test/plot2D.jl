@@ -50,11 +50,11 @@ function plot_model(fig, ax, m::Model; shownvec = false, shownodes = false, show
         elseif legpos == "bottom"
             leg = fig[end+1, 1] = Legend(fig, plt_elem, leg_string, orientation = :horizontal, tellwidth = false, tellheight = true)
         end
-        leg.padding = (5.0f0, 5.0f0, 4.0f0, 4.0f0)
-        leg.linewidth = 1.0
-        leg.patchsize = (5, 3)
-        leg.rowgap = 0.1
-        leg.colgap = 8
+        # leg.padding = (5.0f0, 5.0f0, 4.0f0, 4.0f0)
+        # leg.linewidth = 1.0
+        # leg.patchsize = (5, 3)
+        # leg.rowgap = 0.1
+        # leg.colgap = 8
         # axislegend(ax, plt_elem, leg_string, position = :rt, orientation = :horizontal)
     end
 end
