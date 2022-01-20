@@ -88,7 +88,7 @@ function fig_corridor_therm2D_eps(eps_lab)
 end
 
 # fig_corridor_therm2D_eps(0.0001)
-fig_corridor_therm2D_eps(0.05)
+# fig_corridor_therm2D_eps(0.05)
 # fig_corridor_therm2D_eps(0.75)
 
 # include("./test/run_corridor.jl")
