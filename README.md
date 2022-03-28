@@ -6,6 +6,12 @@ RadMod2D provides a model for calculating view factors of arbitrary two-dimensio
 
 With a set of basic tools like edges, circles etc arbitrary two dimensional geometries can be build and discretized. Complex geometries can be build externally and transfered into the model format. The view factor matrix for the model's elements get calculated with the area integration method and newly developed blocking algorithm. After applying boundary conditions for each element the heat fluxes due to radiation exchange can be calculated.
 
+A detailed discription of the model is given in the following publication by the contributors:
+
+_Büschgens, D., Schubert, C. & Pfeifer, H. Radiation modelling of arbitrary two-dimensional surfaces using the surface-to-surface approach extended with a blocking algorithm. Heat Mass Transfer (2022)._ https://doi.org/10.1007/s00231-022-03203-4
+
+In order to give credit to the RadMod2D contributors, we simply ask you to cite the reference in any publication in which you have made use of the RadMod2D project.
+
 ## Setup and Usage
 
 RadMod2D is written in the [Julia programming language](https://julialang.org/).
@@ -62,7 +68,7 @@ blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
 calculating_vf!(m, vfmat, normit = true)
 ```
 
-Afterwards the heat fluxes per element Q can be calculated with the net radiation method:
+Afterwards the heat flows per element Q can be calculated with the net radiation method:
 ```julia
 epsilon = zeros(m.nelem,1) # emissivities for elements
 set_bc_part!(m, epsilon, 1, 0.3)
