@@ -6,13 +6,13 @@ function model_two_intesecting_circles(d, seed, leftout)
     # two intersecting circles
     m = create_empty_model()
     center1 = Point2D(4,3)
-    add!(m, circle_open(d, center1, seed = seed, leftout = leftout, open = "right", dir = "pos"))
+    add!(m, circle_open(d, center1, seed = seed, leftout = leftout, open = "right", dir = :pos))
     dist_x = m.nodes[end].x - center1.x
     center2 = Point2D(center1.x + 2 * dist_x, center1.y)
-    add!(m, circle_open(d, center2, seed = seed, leftout = leftout, open = "left", dir = "pos"))
+    add!(m, circle_open(d, center2, seed = seed, leftout = leftout, open = "left", dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -22,42 +22,42 @@ function model_rectangle(a, b, elemsize)
     seeda = round(Integer,a/elemsize)
     seedb = round(Integer,b/elemsize)
     center = Point2D(0.0,0.0)
-    add!(m, edge(center, center+Point2D(a,0.0), seed = seeda, dir = "pos"))
-    add!(m, edge(center+Point2D(a,0.0), center+Point2D(a,b), seed = seedb, dir = "pos"))
-    add!(m, edge(center+Point2D(a,b), center+Point2D(0.0,b), seed = seeda, dir = "pos"))
-    add!(m, edge(center+Point2D(0.0,b), center, seed = seedb, dir = "pos"))
+    add!(m, edge(center, center+Point2D(a,0.0), seed = seeda, dir = :pos))
+    add!(m, edge(center+Point2D(a,0.0), center+Point2D(a,b), seed = seedb, dir = :pos))
+    add!(m, edge(center+Point2D(a,b), center+Point2D(0.0,b), seed = seeda, dir = :pos))
+    add!(m, edge(center+Point2D(0.0,b), center, seed = seedb, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
-function model_circle_in_circle(d_in, d_out, elemsize)
+function model_circle_in_circle_centered(d_in, d_out, elemsize)
     # circle in circle
     m = create_empty_model()
     seed_in = round(Integer,(pi*d_in)/elemsize)
     seed_out = round(Integer,(pi*d_out)/elemsize)
     center = Point2D(0.0,0.0)
-    add!(m, circle(d_in, center, seed = seed_in, dir = "neg"))
-    add!(m, circle(d_out, center, seed = seed_out, dir = "pos"))
+    add!(m, circle(d_in, center, seed = seed_in, dir = :neg))
+    add!(m, circle(d_out, center, seed = seed_out, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
-function model_circle_with_opening_line(d, seed, leftout)
+function model_circle_with_opening_line_centered(d, seed, leftout)
     # open circle closed with line
     m = create_empty_model()
     center = Point2D(0.0,0.0)
-    add!(m, circle_open(d, center, seed = seed, leftout = leftout, open = "right", dir = "pos"))
+    add!(m, circle_open(d, center, seed = seed, leftout = leftout, open = "right", dir = :pos))
     p1 = m.nodes[1]
     p2 = m.nodes[end]
     seed_edge = leftout + 1
-    add!(m, edge(p1, p2, seed = seed_edge, dir = "neg"))
+    add!(m, edge(p1, p2, seed = seed_edge, dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -70,12 +70,12 @@ function model_isosceles_triangle(a, alpha_deg, elemsize)
     seeda = round(Integer,a/elemsize)
     seedl = round(Integer,l/elemsize)
     center = Point2D(0.0,0.0)
-    add!(m, edge(center, center+Point2D(0.0,a), seed = seeda, dir = "neg"))
-    add!(m, edge(center, point, seed = seeda, dir = "pos"))
-    add!(m, edge(center+Point2D(0.0,a), point, seed = seedl, dir = "neg"))
+    add!(m, edge(center, center+Point2D(0.0,a), seed = seeda, dir = :neg))
+    add!(m, edge(center, point, seed = seeda, dir = :pos))
+    add!(m, edge(center+Point2D(0.0,a), point, seed = seedl, dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -91,11 +91,11 @@ function model_two_rectangles_with_holes(elemsize)
     seedb = round(Integer,b/elemsize)
     seedb2 = round(Integer,((b-l_spalt)/2)/elemsize)
     center = Point2D(0.0,0.0)
-    add!(m, edge(center, center+Point2D(a,0.0), seed = seeda, dir = "pos"))
-    add!(m, edge(center+Point2D(a,b), center+Point2D(0.0,b), seed = seeda, dir = "pos"))
-    add!(m, edge(center+Point2D(0.0,b), center, seed = seedb, dir = "pos"))
-    add!(m, edge(center+Point2D(a,0.0), center+Point2D(a,(b-l_spalt)/2), seed = seedb2, dir = "pos"))
-    add!(m, edge(center+Point2D(a,(b+l_spalt)/2), center+Point2D(a,b), seed = seedb2, dir = "pos"))
+    add!(m, edge(center, center+Point2D(a,0.0), seed = seeda, dir = :pos))
+    add!(m, edge(center+Point2D(a,b), center+Point2D(0.0,b), seed = seeda, dir = :pos))
+    add!(m, edge(center+Point2D(0.0,b), center, seed = seedb, dir = :pos))
+    add!(m, edge(center+Point2D(a,0.0), center+Point2D(a,(b-l_spalt)/2), seed = seedb2, dir = :pos))
+    add!(m, edge(center+Point2D(a,(b+l_spalt)/2), center+Point2D(a,b), seed = seedb2, dir = :pos))
     # right rect with hole
     c = 0.6
     d = 1.0
@@ -104,14 +104,14 @@ function model_two_rectangles_with_holes(elemsize)
     seedd = round(Integer,d/elemsize)
     seedd2 = round(Integer,((d-l_spalt)/2)/elemsize)
     center = Point2D(a+x_offset,y_offset)
-    add!(m, edge(center, center+Point2D(c,0.0), seed = seedc, dir = "pos"))
-    add!(m, edge(center+Point2D(c,d), center+Point2D(0.0,d), seed = seedc, dir = "pos"))
-    add!(m, edge(center+Point2D(c,0.0), center+Point2D(c,d), seed = seedd, dir = "pos"))
-    add!(m, edge(center+Point2D(0.0,0.0), center+Point2D(0.0,(d-l_spalt)/2), seed = seedd2, dir = "neg"))
-    add!(m, edge(center+Point2D(0.0,(d+l_spalt)/2), center+Point2D(0.0,d), seed = seedd2, dir = "neg"))
+    add!(m, edge(center, center+Point2D(c,0.0), seed = seedc, dir = :pos))
+    add!(m, edge(center+Point2D(c,d), center+Point2D(0.0,d), seed = seedc, dir = :pos))
+    add!(m, edge(center+Point2D(c,0.0), center+Point2D(c,d), seed = seedd, dir = :pos))
+    add!(m, edge(center+Point2D(0.0,0.0), center+Point2D(0.0,(d-l_spalt)/2), seed = seedd2, dir = :neg))
+    add!(m, edge(center+Point2D(0.0,(d+l_spalt)/2), center+Point2D(0.0,d), seed = seedd2, dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -121,25 +121,25 @@ function model_lines()
     seed = 10
     a = 3.0
     d = 0.5
-    add!(m, edge(Point2D(0.0,0.0), Point2D(a,0.0), seed = seed, dir = "pos"))
-    add!(m, edge(Point2D(0.0,d), Point2D(a,d), seed = seed, dir = "neg"))
+    add!(m, edge(Point2D(0.0,0.0), Point2D(a,0.0), seed = seed, dir = :pos))
+    add!(m, edge(Point2D(0.0,d), Point2D(a,d), seed = seed, dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
 function model_cosinus(a, b, seed)
     # cosinus
     m = create_empty_model()
-    add!(m, cosinus(a, b, Point2D(0.0,0.0), seed = seed, dir = "pos"))
+    add!(m, cosinus(a, b, Point2D(0.0,0.0), seed = seed, dir = :pos))
     elemsize = m.elem[1].area
     l_edge = get_length(m.nodes[1], m.nodes[end])
     seed2 = round(Integer,(l_edge/elemsize))
-    add!(m, edge(m.nodes[1], m.nodes[end], seed = seed2, dir = "neg"))
+    add!(m, edge(m.nodes[1], m.nodes[end], seed = seed2, dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -151,13 +151,13 @@ function model_trapez(a, b, h, elemsize)
     p4 = Point2D(b, h)
     l = get_length(p3, p1)
     m = create_empty_model()
-    add!(m, edge(p3, p1, seed = round(Integer,l/elemsize), dir = "pos"))
-    add!(m, edge(p1, p2, seed = round(Integer,a/elemsize), dir = "pos"))
-    add!(m, edge(p2, p4, seed = round(Integer,l/elemsize), dir = "pos"))
-    add!(m, edge(p4, p3, seed = round(Integer,b/elemsize), dir = "pos"))
+    add!(m, edge(p3, p1, seed = round(Integer,l/elemsize), dir = :pos))
+    add!(m, edge(p1, p2, seed = round(Integer,a/elemsize), dir = :pos))
+    add!(m, edge(p2, p4, seed = round(Integer,l/elemsize), dir = :pos))
+    add!(m, edge(p4, p3, seed = round(Integer,b/elemsize), dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -165,13 +165,13 @@ function model_right_triangle(a, b, elemsize)
     # create model
     center = Point2D(0.0, 0.0)
     m = create_empty_model()
-    add!(m, edge(center, center+Point2D(0.0,a), seed = round(Integer,a/elemsize), dir = "neg"))
-    add!(m, edge(center, center+Point2D(b,0.0), seed = round(Integer,b/elemsize), dir = "pos"))
+    add!(m, edge(center, center+Point2D(0.0,a), seed = round(Integer,a/elemsize), dir = :neg))
+    add!(m, edge(center, center+Point2D(b,0.0), seed = round(Integer,b/elemsize), dir = :pos))
     l = get_length(Point2D(0.0,a), Point2D(b,0.0))
-    add!(m, edge(center+Point2D(0.0,a), center+Point2D(b,0.0), seed = round(Integer,l/elemsize), dir = "neg"))
+    add!(m, edge(center+Point2D(0.0,a), center+Point2D(b,0.0), seed = round(Integer,l/elemsize), dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -188,20 +188,20 @@ function model_furnace1()
     elemsize_shr = 0.02
     seedshr = round(Integer,(pi*d)/elemsize_shr)
     x = d + 0.5*d
-    add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = "neg"))
+    add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = :neg))
     x = d + d + 2*d + 0.5*d
-    add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = "neg"))
+    add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = :neg))
     x = d + d + 2*d + d + 2*d + 0.5*d
-    add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = "neg"))
+    add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = :neg))
     # gut
     elemsize_g = 0.03
     seedwg = round(Integer,wg/elemsize_g)
     seedhg = round(Integer,hg/elemsize_g)
     center_g = Point2D(((d + d + 2*d + 0.5*d) - (0.5*wg)),hb)
-    add!(m, edge(center_g, center_g+Point2D(wg,0.0), seed = seedwg, dir = "neg"))
-    add!(m, edge(center_g+Point2D(wg,0.0), center_g+Point2D(wg,hg), seed = seedhg, dir = "neg"))
-    add!(m, edge(center_g+Point2D(wg,hg), center_g+Point2D(0.0,hg), seed = seedwg, dir = "neg"))
-    add!(m, edge(center_g+Point2D(0.0,hg), center_g, seed = seedhg, dir = "neg"))
+    add!(m, edge(center_g, center_g+Point2D(wg,0.0), seed = seedwg, dir = :neg))
+    add!(m, edge(center_g+Point2D(wg,0.0), center_g+Point2D(wg,hg), seed = seedhg, dir = :neg))
+    add!(m, edge(center_g+Point2D(wg,hg), center_g+Point2D(0.0,hg), seed = seedwg, dir = :neg))
+    add!(m, edge(center_g+Point2D(0.0,hg), center_g, seed = seedhg, dir = :neg))
     # furnace chamber
     w = d + d + 2*d + d + 2*d + d + d
     h = 0.5*d + d + 0.5*d + hg + hb
@@ -209,14 +209,14 @@ function model_furnace1()
     seedw = round(Integer,w/elemsize_f)
     seedh = round(Integer,h/elemsize_f)
     center_f = Point2D(0.0,0.0)
-    add!(m, edge(center_f, center_f+Point2D(w,0.0), seed = seedw, dir = "pos"))
-    add!(m, edge(center_f+Point2D(w,0.0), center_f+Point2D(w,h), seed = seedh, dir = "pos"))
-    add!(m, edge(center_f+Point2D(w,h), center_f+Point2D(0.0,h), seed = seedw, dir = "pos"))
-    add!(m, edge(center_f+Point2D(0.0,h), center_f, seed = seedh, dir = "pos"))
+    add!(m, edge(center_f, center_f+Point2D(w,0.0), seed = seedw, dir = :pos))
+    add!(m, edge(center_f+Point2D(w,0.0), center_f+Point2D(w,h), seed = seedh, dir = :pos))
+    add!(m, edge(center_f+Point2D(w,h), center_f+Point2D(0.0,h), seed = seedw, dir = :pos))
+    add!(m, edge(center_f+Point2D(0.0,h), center_f, seed = seedh, dir = :pos))
     # finish
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -235,22 +235,22 @@ function model_furnace2(d, t, n, h)
     seedshr = round(Integer,(pi*d)/elemsize_shr)
     for i = 1:n
         x = 0.5*t + (i-1)*t
-        add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = "neg"))
+        add!(m, circle(d, center_shr+Point2D(x,0.0), seed = seedshr, dir = :neg))
     end
     # furnace chamber
     elemsize_f = 0.05
     seedw = round(Integer,w/elemsize_f)
     seedh = round(Integer,h/elemsize_f)
     center_f = Point2D(0.0,0.0)
-    add!(m, edge(center_f+Point2D(w,0.0), center_f+Point2D(w,h), seed = seedh, dir = "pos"))
-    add!(m, edge(center_f+Point2D(w,h), center_f+Point2D(0.0,h), seed = seedw, dir = "pos"))
-    add!(m, edge(center_f+Point2D(0.0,h), center_f, seed = seedh, dir = "pos"))
+    add!(m, edge(center_f+Point2D(w,0.0), center_f+Point2D(w,h), seed = seedh, dir = :pos))
+    add!(m, edge(center_f+Point2D(w,h), center_f+Point2D(0.0,h), seed = seedw, dir = :pos))
+    add!(m, edge(center_f+Point2D(0.0,h), center_f, seed = seedh, dir = :pos))
     # gut
-    add!(m, edge(center_f, center_f+Point2D(w,0.0), seed = seedw, dir = "pos"))
+    add!(m, edge(center_f, center_f+Point2D(w,0.0), seed = seedw, dir = :pos))
     # finish
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -313,7 +313,7 @@ function model_labyrinth(path, d, elemsize)
     # start
     point1s = Point2D(0.0,0.0)
     point2s = Point2D(0.0,d)
-    add!(m, edge(point1s, point2s, seed = round(Integer,d/elemsize), dir = "neg"))
+    add!(m, edge(point1s, point2s, seed = round(Integer,d/elemsize), dir = :neg))
     # path
     point1 = point1s
     point2 = point2s
@@ -329,7 +329,7 @@ function model_labyrinth(path, d, elemsize)
         # println(point1, " -> ",point2)
         l = point2 - point1
         seed = round(Integer,norm(l)/elemsize)
-        add!(m, edge(point1, point2, seed = seed, dir = "neg"))
+        add!(m, edge(point1, point2, seed = seed, dir = :neg))
     end
     point1f = point2
     # path_o
@@ -347,14 +347,14 @@ function model_labyrinth(path, d, elemsize)
         # println(point1, " -> ",point2)
         l = point2 - point1
         seed = round(Integer,norm(l)/elemsize)
-        add!(m, edge(point1, point2, seed = seed, dir = "pos"))
+        add!(m, edge(point1, point2, seed = seed, dir = :pos))
     end
     point2f = point2
     # finish
-    add!(m, edge(point1f, point2f, seed = round(Integer,d/elemsize), dir = "neg"))
+    add!(m, edge(point1f, point2f, seed = round(Integer,d/elemsize), dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -366,19 +366,19 @@ function model_square_in_square(a, b, elemsize)
     seedb = round(Integer,b/elemsize)
     # inner square
     center = Point2D(-0.5*a,-0.5*a)
-    add!(m, edge(center, center+Point2D(a,0.0), seed = seeda, dir = "neg"))
-    add!(m, edge(center+Point2D(a,0.0), center+Point2D(a,a), seed = seeda, dir = "neg"))
-    add!(m, edge(center+Point2D(a,a), center+Point2D(0.0,a), seed = seeda, dir = "neg"))
-    add!(m, edge(center+Point2D(0.0,a), center, seed = seeda, dir = "neg"))
+    add!(m, edge(center, center+Point2D(a,0.0), seed = seeda, dir = :neg))
+    add!(m, edge(center+Point2D(a,0.0), center+Point2D(a,a), seed = seeda, dir = :neg))
+    add!(m, edge(center+Point2D(a,a), center+Point2D(0.0,a), seed = seeda, dir = :neg))
+    add!(m, edge(center+Point2D(0.0,a), center, seed = seeda, dir = :neg))
     # outer square
     center = Point2D(-0.5*b,-0.5*b)
-    add!(m, edge(center, center+Point2D(b,0.0), seed = seedb, dir = "pos"))
-    add!(m, edge(center+Point2D(b,0.0), center+Point2D(b,b), seed = seedb, dir = "pos"))
-    add!(m, edge(center+Point2D(b,b), center+Point2D(0.0,b), seed = seedb, dir = "pos"))
-    add!(m, edge(center+Point2D(0.0,b), center, seed = seedb, dir = "pos"))
+    add!(m, edge(center, center+Point2D(b,0.0), seed = seedb, dir = :pos))
+    add!(m, edge(center+Point2D(b,0.0), center+Point2D(b,b), seed = seedb, dir = :pos))
+    add!(m, edge(center+Point2D(b,b), center+Point2D(0.0,b), seed = seedb, dir = :pos))
+    add!(m, edge(center+Point2D(0.0,b), center, seed = seedb, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -388,13 +388,13 @@ function model_rect_in_rect(r1x, r1y, r2x, r2y, elemsize)
     center = Point2D(0.0,0.0)
     seedx = round(Integer,r1x/elemsize)
     seedy = round(Integer,r1y/elemsize)
-    add!(m, rectangle(r1x, r1y, center, seedx = seedx, seedy = seedy, dir = "pos"))
+    add!(m, rectangle(r1x, r1y, center, seedx = seedx, seedy = seedy, dir = :pos))
     seedx = round(Integer,r2x/elemsize)
     seedy = round(Integer,r2y/elemsize)
-    add!(m, rectangle(r2x, r2y, center, seedx = seedx, seedy = seedy, dir = "neg"))
+    add!(m, rectangle(r2x, r2y, center, seedx = seedx, seedy = seedy, dir = :neg))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -407,24 +407,24 @@ function model_circles_in_circle_cross(d_in, d_out, n_diag, elemsize)
     seed_in = round(Integer,(pi*d_in)/elemsize)
     seed_out = round(Integer,(pi*d_out)/elemsize)
     center = Point2D(0.0,0.0)
-    add!(m, circle(d_in, center, seed = seed_in, dir = "neg"))
+    add!(m, circle(d_in, center, seed = seed_in, dir = :neg))
     dist = (d_out/2) / ((n_diag-1)/2 + 1)
     distadd = dist
     for i = 1:((n_diag-1)/2)
         pos = Point2D(center.x+distadd,center.y)
-        add!(m, circle(d_in, pos, seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos, seed = seed_in, dir = :neg))
         pos = Point2D(center.x,center.y+distadd)
-        add!(m, circle(d_in, pos, seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos, seed = seed_in, dir = :neg))
         pos = Point2D(center.x-distadd,center.y)
-        add!(m, circle(d_in, pos, seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos, seed = seed_in, dir = :neg))
         pos = Point2D(center.x,center.y-distadd)
-        add!(m, circle(d_in, pos, seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos, seed = seed_in, dir = :neg))
         distadd += dist
     end
-    add!(m, circle(d_out, center, seed = seed_out, dir = "pos"))
+    add!(m, circle(d_out, center, seed = seed_out, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -468,12 +468,12 @@ function model_circles_in_circle_rand(d_in, d_out, n, elemsize)
     center = Point2D(0.0,0.0)
     pos = get_rand_pos_cirlce(d_in, d_out, center, n, sector = 1.0)
     for i = 1:n
-        add!(m, circle(d_in, pos[i], seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos[i], seed = seed_in, dir = :neg))
     end
-    add!(m, circle(d_out, center, seed = seed_out, dir = "pos"))
+    add!(m, circle(d_out, center, seed = seed_out, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -501,12 +501,12 @@ function model_circles_in_circle_rand_full(d_in, d_out, elemsize)
             Point2D(0.41979923540554165, 0.6371896374415813),
             Point2D(-0.7000331990175072, -0.18264038174416705)]
     for i = 1:size(pos,1)
-        add!(m, circle(d_in, pos[i], seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos[i], seed = seed_in, dir = :neg))
     end
-    add!(m, circle(d_out, center, seed = seed_out, dir = "pos"))
+    add!(m, circle(d_out, center, seed = seed_out, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -534,12 +534,12 @@ function model_circles_in_circle_rand_half(d_in, d_out, elemsize)
             Point2D(0.1441893023975679, 0.5489509459934137),
             Point2D(-0.1152357517458235, 0.7092795091829979)]
     for i = 1:size(pos,1)
-        add!(m, circle(d_in, pos[i], seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos[i], seed = seed_in, dir = :neg))
     end
-    add!(m, circle(d_out, center, seed = seed_out, dir = "pos"))
+    add!(m, circle(d_out, center, seed = seed_out, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -567,12 +567,12 @@ function model_circles_in_circle_rand_quarter(d_in, d_out, elemsize)
             Point2D(0.18759948878965407, 0.5348799473499365),
             Point2D(0.2496608248774685, 0.7253070400849649)]
     for i = 1:size(pos,1)
-        add!(m, circle(d_in, pos[i], seed = seed_in, dir = "neg"))
+        add!(m, circle(d_in, pos[i], seed = seed_in, dir = :neg))
     end
-    add!(m, circle(d_out, center, seed = seed_out, dir = "pos"))
+    add!(m, circle(d_out, center, seed = seed_out, dir = :pos))
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end
 
@@ -586,10 +586,10 @@ function model_line_to_line_with_obstacles(a, b, c, n, elemsize)
     seeda = round(Integer,a/elemsize)
     point1 = Point2D(0.0,0.0)
     point2 = Point2D(a,0.0)
-    add!(m, edge(point1, point2, seed = seeda, dir = "pos"))
+    add!(m, edge(point1, point2, seed = seeda, dir = :pos))
     point1 = Point2D(0.0,b)
     point2 = Point2D(a,b)
-    add!(m, edge(point1, point2, seed = seeda, dir = "neg"))
+    add!(m, edge(point1, point2, seed = seeda, dir = :neg))
     d = a / (2*n-1)
     seedd = round(Integer,d/elemsize)
     e = 0.0
@@ -597,11 +597,11 @@ function model_line_to_line_with_obstacles(a, b, c, n, elemsize)
         point1 = Point2D(e,c)
         e += d
         point2 = Point2D(e,c)
-        add!(m, edge(point1, point2, seed = seedd, dir = "neg"))
+        add!(m, edge(point1, point2, seed = seedd, dir = :neg))
         e += d
     end
     offset_model!(m)
-    mi = make_model_immutable(m)
-    println("model has ", mi.nelem, " elements")
+    mi = ConstModel(m)
+    println("model has ", mi.no_elements, " elements")
     return mi
 end

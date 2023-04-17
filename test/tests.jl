@@ -12,8 +12,8 @@ function test_mesh2D()
     # which model
     # m = model_two_intesecting_circles(3.0, 120, 24)
     # m = model_rectangle(2.0, 4.0, 0.1)
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
-    # m = model_circle_with_opening_line(3.0, 120, 15)
+    # m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
+    # m = model_circle_with_opening_line_centered(3.0, 120, 15)
     # m = model_isosceles_triangle(2.0, 90, 0.2)
     # m = model_two_rectangles_with_holes(0.02)
     # m = model_lines()
@@ -25,7 +25,7 @@ function test_mesh2D()
     # m = model_labyrinth([0.4, -0.4, 0.4, 0.2, 0.5, -0.3, -0.2], 0.1, 0.02)
     # m = model_square_in_square(0.8, 1.6, 0.01)
     # m = model_rect_in_rect(1.0, 3.0, 2.0, 4.0, 0.03)
-    # m = model_circles_in_circle_cross(0.1, 1.8, 9, 0.01)
+    m = model_circles_in_circle_cross(0.1, 1.8, 9, 0.01)
     # m = model_circles_in_circle_rand(0.1, 1.8, 17, 0.01)
     # m = model_circles_in_circle_rand_full(0.1, 1.8, 0.01)
     # m = model_circles_in_circle_rand_half(0.1, 1.8, 0.01)
@@ -39,7 +39,7 @@ function test_mesh2D()
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
-    plot_model(fig, ax, m, shownvec = true, shownodes = false, showcom = false)
+    plot_model(fig, ax, m, show_norm_vec = true, shownodes = false, showcom = false)
     display(fig)
 end
 
@@ -133,7 +133,7 @@ view2D - testing
 function test_view2D_blocking_2elem()
     # test double open circle case
     m = model_two_intesecting_circles(3.0, 120, 3)
-    # m = model_circle_with_opening_line(2.0, 360, 143)
+    # m = model_circle_with_opening_line_centered(2.0, 360, 143)
     # 2D plot
     fig = Figure(resolution = (900, 900))
     ax = fig[1, 1] = Axis(fig)
@@ -142,16 +142,20 @@ function test_view2D_blocking_2elem()
     ax.aspect = DataAspect()
     # create tiles
     n = 30
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     plot_empty_tiles(fig, ax, dx, dy, n)
     plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
-    plot_model(fig, ax, m, shownvec = false, shownodes = false, showcom = false)
+    plot_model(fig, ax, m, show_norm_vec = false, shownodes = false, showcom = false)
     # elem pair check
     i1 = 50
     i2 = 160
-    plot_model_elements(fig, ax, m, [i1,i2], shownvec = true, shownodes = false, showcom = false)
-    isexisting = existing_vf_2elem(m, i1, i2)
+    plot_model_elements(fig, ax, m, [i1,i2], show_norm_vec = true, shownodes = false, showcom = false)
+    isexisting = are_elements_facing(m, m.elements[i1], m.elements[i2])
+
+    (isexisting ? println("is existing between ", i1, " and ", i2) : 
+            println("is not existing between ", i1, " and ", i2))
+
     if isexisting
         linesegments!(ax, [Point2f0(m.elem[i1].com.x, m.elem[i1].com.y) => Point2f0(m.elem[i2].com.x, m.elem[i2].com.y)], color = :blue, linewidth = 3)
         blocking_vf_with_tiles_2elem(fig, ax, i1, i2, m, dx, dy, n, t_occ)
@@ -164,14 +168,14 @@ function test_view2D_blocking_bf_vs_tiles()
     # m = model_two_intesecting_circles(3.0, 360, 36)
     m = model_two_rectangles_with_holes(0.02)
     # blocking with brute force
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
-    @time blocking_vf!(m, vfmat)
+    @time blocking_vf_brute_force!(m, vfmat)
     # blocking with tilewalk
-    vfmat2 = zeros(Float64, m.nelem, m.nelem)
+    vfmat2 = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat2)
     n = 10
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat2, dx, dy, n, t_occ)
     # check for difference
@@ -186,7 +190,7 @@ function test_view2D_blocking_bf_vs_tiles()
     # ax.aspect = DataAspect()
     # plot_empty_tiles(fig, ax, dx, dy, n)
     # plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
-    # plot_model(fig, ax, m, shownvec = false, shownodes = false, showcom = false)
+    # plot_model(fig, ax, m, show_norm_vec = false, shownodes = false, showcom = false)
     # plot_existing(fig, ax, m, 40, vfmat2)
     # display(fig)
 end
@@ -195,8 +199,8 @@ function test_view2D_vf()
     #### which model
     # m = model_two_intesecting_circles(3.0, 360, 45)
     # m = model_rectangle(2.0, 5.0, 0.1)
-    # m = model_circle_in_circle(3.3, 5.2, 0.1)
-    # m = model_circle_with_opening_line(2.0, 360, 143)
+    # m = model_circle_in_circle_centered(3.3, 5.2, 0.1)
+    # m = model_circle_with_opening_line_centered(2.0, 360, 143)
     # m = model_labyrinth(0.02)
     # m = model_square_in_square(0.8, 1.6, 0.01)
     # m = model_rect_in_rect(0.8, 0.8, 1.6, 1.6, 0.05)
@@ -205,14 +209,14 @@ function test_view2D_vf()
     # m = model_circles_in_circle_rand_quarter(0.1, 1.8, 0.005)
     m = model_circles_in_circle_cross(0.1, 1.8, 9, 0.01)
     #### vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     @time existing_vf!(m, vfmat)
     n = 20
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     @time calculating_vf!(m, vfmat, normit = false)
-    vfmatp = vfmat_to_parts(m, vfmat, normit = false)
+    vfmatp = compact_vfmat_to_parts(m, vfmat, normit = false)
     #### 2D plot
     fig = Figure(resolution = (1400, 900))
     ax = fig[1, 1] = Axis(fig)
@@ -221,12 +225,12 @@ function test_view2D_vf()
     ax.aspect = DataAspect()
     # plot_empty_tiles(fig, ax, dx, dy, n)
     # plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
-    plot_model(fig, ax, m, shownvec = false, shownodes = false, showcom = false)
+    plot_model(fig, ax, m, show_norm_vec = false, shownodes = false, showcom = false)
     plot_existing(fig, ax, m, 170, vfmat)
     display(fig)
     #### post processing
     # control = sum(vfmatp, dims=2)
-    # save_vfmat_part_to_csv(vfmatp, "figures", "cyl_in_cyl_rand_cross_0n005", control = true)
+    # save_vfmat_part_to_csv(m, vfmatp, "figures", "cyl_in_cyl_rand_cross_0n005", control = true)
     # vfmatp
 end
 
@@ -234,14 +238,14 @@ function test_view2D_tiles(; n = 15)
     #### which model
     # m = model_two_intesecting_circles(3.0, 360, 45)
     # m = model_rectangle(2.0, 5.0, 0.1)
-    # m = model_circle_in_circle(0.8, 1.6, 0.001)
-    # m = model_circle_with_opening_line(2.0, 360, 143)
+    # m = model_circle_in_circle_centered(0.8, 1.6, 0.001)
+    # m = model_circle_with_opening_line_centered(2.0, 360, 143)
     # m = model_labyrinth(0.02)
     m = model_square_in_square(0.8, 1.6, 0.01)
     #### vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     @time existing_vf!(m, vfmat)
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     #### 2D plot
     fig = Figure(resolution = (1400, 900))
@@ -251,7 +255,7 @@ function test_view2D_tiles(; n = 15)
     ax.aspect = DataAspect()
     plot_empty_tiles(fig, ax, dx, dy, n)
     plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
-    plot_model(fig, ax, m, shownvec = false, shownodes = false, showcom = false)
+    plot_model(fig, ax, m, show_norm_vec = false, shownodes = false, showcom = false)
     display(fig)
 end
 
@@ -259,10 +263,10 @@ function test_view2D_shadow()
     # test blocking with shadow plot
     m = model_two_rectangles_with_holes(0.02)
     # blocking with tilewalk
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
     n = 30
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     # 2D plot
@@ -273,7 +277,7 @@ function test_view2D_shadow()
     ax.aspect = DataAspect()
     # plot_empty_tiles(fig, ax, dx, dy, n)
     # plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
-    # plot_model(fig, ax, m, shownvec = true, shownodes = false, showcom = false)
+    # plot_model(fig, ax, m, show_norm_vec = true, shownodes = false, showcom = false)
     # plot_existing(fig, ax, m, 150, vfmat)
     # plot_model_shadow_1to1(fig, ax, m, vfmat, 3, 8)
     plot_model_shadow_1toAll(fig, ax, m, vfmat, 3)
@@ -281,8 +285,8 @@ function test_view2D_shadow()
 end
 
 function test_tile_occ_analysis(;n = 10)
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
-    dx, dy = create_tiles(m, n)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     # tile_occ_analysis(t_occ)
     t_max, t_min, t_mean, ratio = tile_occ_analysis(t_occ, printit = false)
@@ -296,32 +300,32 @@ function test_therm2D()
     # which model
     # m = model_two_intesecting_circles(3.0, 120, 24)
     m = model_rectangle(2.0, 2.5, 0.1)
-    # m = model_circle_in_circle(3.3, 5.2, 0.1)
+    # m = model_circle_in_circle_centered(3.3, 5.2, 0.1)
     # vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
     n = 30
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     calculating_vf!(m, vfmat, normit = true)
     # solve Qp
-    epsilon = zeros(m.nelem,1)
+    epsilon = zeros(m.no_elements,1)
     set_bc_part!(m, epsilon, 1, 0.9)
     set_bc_part!(m, epsilon, 2:4, 0.3)
-    temp = zeros(m.nelem,1)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1, 602)
     set_bc_part!(m, temp, 2, 600)
     set_bc_part!(m, temp, 3:4, 590)
     @time Qp, G = tempsolver(m, vfmat, temp, epsilon)
-    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.npar]
+    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.no_parts]
     # 2D plot
     fig = Figure(resolution = (1400, 900))
     ax = fig[1, 1] = Axis(fig)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
-    # plot_model(fig, ax, m, shownvec = true, shownodes = false, showcom = false)
+    # plot_model(fig, ax, m, show_norm_vec = true, shownodes = false, showcom = false)
     plot_model_with_value(fig, ax, m, Qp, "Wärmestrom in W", showcbar = false)
     display(fig)
 end

@@ -23,14 +23,14 @@ vfmata[2,1] = r1 / r2
 vfmata[2,2] = 1- vfmata[2,1]
 
 # RadMod2D
-m = model_circle_in_circle(0.8, 1.6, elemsize)
-vfmat = zeros(Float64, m.nelem, m.nelem)
+m = model_circle_in_circle_centered(0.8, 1.6, elemsize)
+vfmat = zeros(Float64, m.no_elements, m.no_elements)
 @time existing_vf!(m, vfmat)
-dx, dy = create_tiles(m, n)
+dx, dy = get_tile_dimensions(m, n)
 @time t_occ = check_tile_occupation(m, dx, dy, n)
 @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
 @time calculating_vf!(m, vfmat, normit = false)
-vfmatp = vfmat_to_parts(m, vfmat, normit = false)
+vfmatp = compact_vfmat_to_parts(m, vfmat, normit = false)
 
 # compare results to check if algorithm is working properly
 println("analytical results:")

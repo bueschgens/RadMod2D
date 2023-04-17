@@ -1,314 +1,267 @@
-#= ######################################################
-model structs
+#= ###################################################### Geoemtry representation for 2D
+
+Models are represented by a list of nodes and a list of line elements.
+
+LineElements only refer to model (part) node list for computation efficiency.
+LineElement normal vectors (norm_vec), center of mass (com) and length are precomputed
+at geometry generation for efficiency.
+
+For geometry generation, the model is mutable. After geometry generation, the model is
+made immutable for efficiency within the vief factor and blocking calculations.
+Therefore, two different structs are used.
 ###################################################### =# 
 
-mutable struct ElementRaw{T1<:Integer, T2<:AbstractFloat}
-    node1::T1
-    node2::T1
+abstract type AbstractLineElement end
+abstract type AbstractModel end
+
+
+mutable struct MutableLineElement{T1<:Integer, T2<:AbstractFloat} <: AbstractLineElement
+    no_node1::T1
+    no_node2::T1
     com::Point2D{T2}
-    nvec::Point2D{T2}
-    area::T2
+    norm_vec::Point2D{T2}
+    length::T2
+
+    # function MutableLineElement(no_node1::T1, no_node2::T1, com::Point2D{T2}, norm_vec::Point2D{T2}, length::T2) where {T1<:Integer, T2<:AbstractFloat}
+    #     new{T1, T2}(no_node1, no_node2, com, norm_vec, length)
+    # end
 end
 
-struct Element{T1<:Integer, T2<:AbstractFloat}
-    node1::T1
-    node2::T1
+
+struct ConstLineElement{T1<:Integer, T2<:AbstractFloat} <: AbstractLineElement
+    no_node1::T1
+    no_node2::T1
     com::Point2D{T2}
-    nvec::Point2D{T2}
-    area::T2
+    norm_vec::Point2D{T2}
+    length::T2
+
+    # function ConstLineElement(no_node1::T1, no_node2::T1, com::Point2D{T2}, norm_vec::Point2D{T2}, length::T2) where {T1<:Integer, T2<:AbstractFloat}
+    #     new{T1,T2}(no_node1, no_node2, com, norm_vec, length)
+    # end
 end
 
-struct Part{T1<:Integer, T2<:AbstractFloat}
+
+mutable struct Part{T1<:Integer, T2<:AbstractFloat}
     nodes::Vector{Point2D{T2}}
-    elem::Vector{ElementRaw{T1,T2}}
-    nnodes::T1
-    nelem::T1
+    elements::Vector{MutableLineElement{T1,T2}}
+    no_nodes::T1
+    no_elements::T1
+    name::String
+
+    # function Part(nodes::Vector{Point2D{T2}}, elements::Vector{MutableLineElement{T1,T2}}, no_nodes::T1, no_elements::T1, name::String) where {T1<:Integer, T2<:AbstractFloat}
+    #     new{T1,T2}(nodes, elements, no_nodes, no_elements, name)
+    # end
 end
 
-struct ElementAssign{T<:Integer}
+
+struct ElementToPartAssign{T<:Integer}
     first::T
     last::T
+
+    # function ElementToPartAssign(first::T, last::T) where {T<:Integer}
+    #     new{T}(first, last)
+    # end
 end
 
-mutable struct ModelRaw{T1<:Integer, T2<:AbstractFloat}
+
+mutable struct MutableModel{T1<:Integer, T2<:AbstractFloat} <: AbstractModel
     nodes::Vector{Point2D{T2}}
-    elem::Vector{ElementRaw{T1,T2}}
-    elem2par::Vector{ElementAssign{T1}}
-    nnodes::T1
-    nelem::T1
-    npar::T1
-end
+    elements::Vector{MutableLineElement{T1,T2}}
+    elem2par::Vector{ElementToPartAssign{T1}}
+    no_nodes::T1
+    no_elements::T1
+    no_parts::T1
+    part_names::Vector{String}
 
-struct Model{T1<:Integer, T2<:AbstractFloat}
-    nodes::Vector{Point2D{T2}}
-    elem::Vector{Element{T1,T2}}
-    elem2par::Vector{ElementAssign{T1}}
-    nnodes::T1
-    nelem::T1
-    npar::T1
-end
-
-#= ######################################################
-Functions for working with structs
-###################################################### =# 
-
-function create_empty_model()
-    return ModelRaw(Vector{Point2D{Float64}}(), Vector{ElementRaw{Int64,Float64}}(), Vector{ElementAssign{Int64}}(), 0, 0, 0)
-end
-
-function norm(v::Point2D)
-    l = sqrt(v.x^2 + v.y^2)
-    return l
-end
-
-function normit(v::Point2D)::Point2D
-    vn = v / norm(v)
-    return vn
-end
-
-function add_offset!(p::Part, offset::Integer)
-    for i = 1:p.nelem
-        p.elem[i].node1 += offset
-        p.elem[i].node2 += offset
+    function MutableModel(int_val::T1,float_val::T2)::MutableModel{T1, T2} where {T1<:Integer, T2<:AbstractFloat}
+        return new{T1,T2}(Vector{Point2D{T2}}(), Vector{MutableLineElement{T1,T2}}(), 
+                Vector{ElementToPartAssign{T1}}(), 0, 0, 0, [""])
     end
 end
 
-function get_com(p1::Point2D{T}, p2::Point2D{T})::Point2D{T} where T<:AbstractFloat
-    # calculate center of line (center of mass)
-    c = p1 + ((p2 - p1) / 2)
-    return c
+
+struct ConstModel{T1<:Integer, T2<:AbstractFloat} <: AbstractModel
+    nodes::Vector{Point2D{T2}}
+    elements::Vector{ConstLineElement{T1,T2}}
+    elem2par::Vector{ElementToPartAssign{T1}}
+    no_nodes::T1
+    no_elements::T1
+    no_parts::T1
+    part_names::Vector{String}
+
+    function ConstModel(m::MutableModel{T1, T2})::ConstModel{T1, T2} where {T1<:Integer, T2<:AbstractFloat}
+        nodes = m.nodes
+        elements = Vector{ConstLineElement{Int64,Float64}}(undef,m.no_elements)
+        for i = 1:m.no_elements
+            i1 = m.elements[i].no_node1
+            i2 = m.elements[i].no_node2
+            com = m.elements[i].com
+            norm_vec = m.elements[i].norm_vec
+            len = m.elements[i].length
+            elements[i] = ConstLineElement(i1, i2, com, norm_vec, len)
+        end
+        elem2par = m.elem2par
+        no_nodes = m.no_nodes
+        no_elements = m.no_elements
+        no_parts = m.no_parts
+        part_names = m.part_names
+
+        return new{T1, T2}(nodes, elements, elem2par, no_nodes, no_elements, no_parts, 
+                part_names)
+    end
 end
 
-function get_nvec(p1::Point2D{T}, p2::Point2D{T}, dir::String)::Point2D{T} where T<:AbstractFloat
-    # calculate normal vector
-    n = Point2D((-1) * (p2.y - p1.y), (p2.x - p1.x))
-    (dir == "neg") && (n = n * (-1.0))
-    n_norm = normit(n)
-    return n_norm
+
+
+"""
+    create_empty_model()
+
+Initializes an empty model.
+"""
+function create_empty_model()
+    return MutableModel(1, 1.0)
 end
 
-function get_length(p1::Point2D, p2::Point2D)
-    # calculate length of line element
-    # is used as area here
-    l = sqrt((p1.x-p2.x)^2 + (p1.y-p2.y)^2)
-    return l
+
+
+"""
+    add_offset!(p::Part, offset::Integer)
+
+Adds offset `offset` to all node numbers in part `p`.
+"""
+function add_offset!(p::Part, offset::Integer)
+    for i = 1:p.no_elements
+        p.elements[i].no_node1 += offset
+        p.elements[i].no_node2 += offset
+    end
 end
 
-function add!(m::ModelRaw, p::Part)
-    append!(m.nodes, p.nodes)
-    add_offset!(p, m.nnodes)
-    append!(m.elem, p.elem)
-    push!(m.elem2par, ElementAssign(m.nelem+1, m.nelem+p.nelem))
-    m.nnodes += p.nnodes
-    m.nelem += p.nelem
-    m.npar += 1
+
+
+"""
+    add!(m::MutableModel, p::Part)
+
+Adds part ``p` to mutable model `m`.
+"""
+function add!(m::MutableModel, p::Part)
+    if m.no_parts == 0
+        m.nodes = p.nodes
+        m.elements = p.elements
+        m.elem2par = [ElementToPartAssign(1, p.no_elements)]
+        m.no_nodes = p.no_nodes
+        m.no_elements = p.no_elements
+        m.no_parts = 1
+        m.part_names = [p.name]
+    else
+        append!(m.nodes, p.nodes)
+        add_offset!(p, m.no_nodes)
+        append!(m.elements, p.elements)
+        push!(m.elem2par, ElementToPartAssign(m.no_elements+1, m.no_elements+p.no_elements))
+        m.no_nodes += p.no_nodes
+        m.no_elements += p.no_elements
+        m.no_parts += 1
+         
+        if p.name == nothing || p.name == "" 
+            push!(m.part_names, "part $(m.no_parts)")
+        else
+            push!(m.part_names, p.name)
+        end
+    end
 end
 
-function get_nodes_min_and_max(m)
+
+
+"""
+add!(p1::Part, p2::Part)
+
+Adds part ``p1` to mutable part `p2`.
+"""
+function add!(p1::Part, p2::Part)
+        append!(p1.nodes, p2.nodes)
+        add_offset!(p2, p1.no_nodes)
+        append!(p1.elements, p2.elements)
+        p1.no_nodes += p2.no_nodes
+        p1.no_elements += p2.no_elements
+         
+        if p1.name == nothing || p1.name == "" 
+            p1.name = p2.name
+        else
+            # not change part name!
+        end
+end
+
+
+
+"""
+    get_min_max_coordinates(m::MutableModel)
+
+#Arguments
+- `m::Model`: Model
+
+#Returns
+- `Tuple{Point2D,Point2D}` with minimum and maximum coordinates of model nodes
+"""
+function get_min_max_coordinates(m::AbstractModel)::Tuple{Point2D,Point2D}
     # get minimum and maximum value of nodes
     # as Vector of Point2D
-    xmin = minimum(m.nodes[i].x for i = 1:m.nnodes)
-    xmax = maximum(m.nodes[i].x for i = 1:m.nnodes)
-    ymin = minimum(m.nodes[i].y for i = 1:m.nnodes)
-    ymax = maximum(m.nodes[i].y for i = 1:m.nnodes)
+    xmin = minimum(m.nodes[i].x for i = 1:m.no_nodes)
+    xmax = maximum(m.nodes[i].x for i = 1:m.no_nodes)
+    ymin = minimum(m.nodes[i].y for i = 1:m.no_nodes)
+    ymax = maximum(m.nodes[i].y for i = 1:m.no_nodes)
     return Point2D(xmin, ymin), Point2D(xmax, ymax)
 end
 
-function offset_model!(m::ModelRaw)
+
+
+"""
+    offset_model!(m::MutableModel)
+
+Modifies m by offsetting all nodes and elements to only positiv coordinates.
+
+#Arguments
+- `m::MutableModel`
+"""
+function offset_model!(m::MutableModel)
     # offset all nodes to only positiv coords
-    nmin, nmax = get_nodes_min_and_max(m)
-    for i = 1:m.nnodes
-        m.nodes[i] = m.nodes[i] - nmin
+    p_xy_min, p_xy_max = get_min_max_coordinates(m)
+    for i = 1:m.no_nodes
+        m.nodes[i] = m.nodes[i] - p_xy_min
     end
-    for i = 1:m.nelem
-        m.elem[i].com = m.elem[i].com - nmin
+    for i = 1:m.no_elements
+        m.elements[i].com = m.elements[i].com - p_xy_min
     end
 end
 
-function make_model_immutable(m::ModelRaw)::Model
-    nodes = m.nodes
-    elem = Vector{Element{Int64,Float64}}(undef,m.nelem)
-    for i = 1:m.nelem
-        i1 = m.elem[i].node1
-        i2 = m.elem[i].node2
-        c = m.elem[i].com
-        nv = m.elem[i].nvec
-        a = m.elem[i].area
-        elem[i] = Element(i1, i2, c, nv, a)
-    end
-    elem2par = m.elem2par
-    nnodes = m.nnodes
-    nelem = m.nelem
-    npar = m.npar
-    return Model(nodes, elem, elem2par, nnodes, nelem, npar)
-end
 
-#= ######################################################
-Define discretized geometries
-###################################################### =# 
+"""
+    element_analysis(m::AbstractModel; printit = true)
 
-function edge(p1::Point2D, p2::Point2D; seed::T = 10, dir::String = "pos") where T<:Integer
-    """
-    creating edge between two points
-    # println("edge between ", p1, " and ",p2)
-    """
-    dx = (p2.x - p1.x) / seed
-    dy = (p2.y - p1.y) / seed
-    nnodes = seed+1
-    nodes = Vector{Point2D{Float64}}(undef,nnodes)
-    for i = 1:nnodes
-        nodes[i] = Point2D(p1.x + (i-1) * dx, p1.y + (i-1) * dy)
-    end
-    # nodes = [Point2D(p1.x + (i-1) * dx, p1.y + (i-1) * dy) for i = 1:nnodes]
-    nelements = seed
-    elements = Vector{ElementRaw{Int64,Float64}}(undef,nelements)
-    for i = 1:nelements
-        i1 = i
-        i2 = i + 1
-        c = get_com(nodes[i1], nodes[i2])
-        nv = get_nvec(nodes[i1], nodes[i2], dir)
-        a = get_length(nodes[i1], nodes[i2])
-        elements[i] = ElementRaw(i1, i2, c, nv, a)
-    end
-    return Part(nodes, elements, nnodes, nelements)
-end
+Quick analysis of model elements.
 
-function rectangle(x::T1, y::T1, c::Point2D; seedx::T2 = 10, seedy::T2 = 10, dir::String = "pos") where {T1<:Real, T2<:Integer}
-    # creating rectangle with center
-    p1 = c + Point2D(-0.5*x, -0.5*y)
-    p2 = c + Point2D(-0.5*x, 0.5*y)
-    p3 = c + Point2D(0.5*x, 0.5*y)
-    p4 = c + Point2D(0.5*x, -0.5*y)
-    dx = (p3.x - p2.x) / seedx
-    dy = (p2.y - p1.y) / seedy
-    nnodes = 2*seedx + 2*seedy
-    nodes = Vector{Point2D{Float64}}(undef,nnodes)
-    for i = 1:seedy
-        nodes[i] = Point2D(p1.x, p1.y + (i-1) * dy)
-    end
-    offset = seedy
-    for i = 1:seedx
-        nodes[offset + i] = Point2D(p2.x + (i-1) * dx, p2.y)
-    end
-    offset = seedy + seedx
-    for i = 1:seedy
-        nodes[offset + i] = Point2D(p3.x, p3.y - (i-1) * dy)
-    end
-    offset = seedy + seedx + seedy
-    for i = 1:seedx
-        nodes[offset + i] = Point2D(p4.x - (i-1) * dx, p4.y)
-    end
-    nelements = nnodes
-    elements = Vector{ElementRaw{Int64,Float64}}(undef,nelements)
-    for i = 1:nelements-1
-        i1 = i
-        i2 = i + 1
-        c = get_com(nodes[i1], nodes[i2])
-        nv = get_nvec(nodes[i1], nodes[i2], dir)
-        a = get_length(nodes[i1], nodes[i2])
-        elements[i] = ElementRaw(i1, i2, c, nv, a)
-    end
-    i1 = nnodes
-    i2 = 1
-    c = get_com(nodes[i1], nodes[i2])
-    nv = get_nvec(nodes[i1], nodes[i2], dir)
-    a = get_length(nodes[i1], nodes[i2])
-    elements[end] = ElementRaw(i1, i2, c, nv, a)
-    return Part(nodes, elements, nnodes, nelements)
-end
+#Arguments
+- `m::MutableModel`: Model
 
-function circle(d::T1, c::Point2D; seed::T2 = 12, dir::String = "pos") where {T1<:Real, T2<:Integer}
-    # creating circle based on diameter and center
-    r = d/2
-    phi = 2 * pi / seed
-    nnodes = seed
-    nodes = Vector{Point2D{Float64}}(undef,nnodes)
-    for i = 1:nnodes
-        nodes[i] = Point2D(c.x + r * cos(i*phi), c.y + r * sin(i*phi))
-    end
-    nelements = seed
-    elements = Vector{ElementRaw{Int64,Float64}}(undef,nelements)
-    for i = 1:nelements-1
-        i1 = i
-        i2 = i + 1
-        c = get_com(nodes[i1], nodes[i2])
-        nv = get_nvec(nodes[i1], nodes[i2], dir)
-        a = get_length(nodes[i1], nodes[i2])
-        elements[i] = ElementRaw(i1, i2, c, nv, a)
-    end
-    i1 = nnodes
-    i2 = 1
-    c = get_com(nodes[i1], nodes[i2])
-    nv = get_nvec(nodes[i1], nodes[i2], dir)
-    a = get_length(nodes[i1], nodes[i2])
-    elements[end] = ElementRaw(i1, i2, c, nv, a)
-    return Part(nodes, elements, nnodes, nelements)
-end
+#Keyword Arguments
+- `printit::Bool`: If true, print results to console
 
-function circle_open(d::T1, c::Point2D; seed::T2 = 12, leftout::T2 = 2, open::String = "right", dir::String = "pos") where {T1<:Real, T2 <: Integer}
-    # creating circle based on diameter and center which is open at one side
-    r = d/2
-    phi = 2 * pi / seed
-    # use half of leftout as start
-    phio = 2 * pi / seed * (leftout/2) # phi offset
-    if open == "left"
-        phio = phio + 1 * pi
-    end
-    nnodes = seed-leftout+1
-    nodes = Vector{Point2D{Float64}}(undef,nnodes)
-    for i = 1:nnodes
-        nodes[i] = Point2D(c.x + r * cos((i-1) * phi + phio), c.y + r * sin((i-1) * phi + phio))
-    end
-    nelements = seed - leftout
-    elements = Vector{ElementRaw{Int64,Float64}}(undef,nelements)
-    for i = 1:nelements
-        i1 = i
-        i2 = i + 1
-        c = get_com(nodes[i1], nodes[i2])
-        nv = get_nvec(nodes[i1], nodes[i2], dir)
-        a = get_length(nodes[i1], nodes[i2])
-        elements[i] = ElementRaw(i1, i2, c, nv, a)
-    end
-    return Part(nodes, elements, nnodes, nelements)
-end
-
-function cosinus(a::T1, b::T1, p1::Point2D; seed::T2 = 30, dir::String = "pos") where {T1<:Real, T2<:Integer}
-    # creating cosinus wave
-    nnodes = seed+1
-    nodes = Vector{Point2D{Float64}}(undef,nnodes)
-    for i = 1:nnodes
-        nodes[i] = Point2D(p1.x + b*(i-1)*2*pi/(seed), p1.y + a*cos((i-1)*2*pi/(seed)))
-    end
-    nelements = seed
-    elements = Vector{ElementRaw{Int64,Float64}}(undef,nelements)
-    for i = 1:nelements
-        i1 = i
-        i2 = i + 1
-        c = get_com(nodes[i1], nodes[i2])
-        nv = get_nvec(nodes[i1], nodes[i2], dir)
-        a = get_length(nodes[i1], nodes[i2])
-        elements[i] = ElementRaw(i1, i2, c, nv, a)
-    end
-    return Part(nodes, elements, nnodes, nelements)
-end
-
-#= ######################################################
-Other functions
-###################################################### =# 
-
-function element_analysis(m::Model; printit = true)
+#Returns
+- `e_length_max::Float64`: Maximum element length
+- `e_length_min::Float64`: Minimum element length
+- `e_length_mean::Float64`: Mean element length
+"""
+function element_analysis(m::AbstractModel; printit = true)::Tuple{Float64,Float64,Float64}
     # analysis of elements
-    area = [m.elem[i].area for i = m.elem2par[1].first:m.elem2par[end].last]
-    e_length_mean = sum(area) / m.nelem
+    length = [m.elements[i].length for i = m.elem2par[1].first:m.elem2par[end].last]
+    e_length_mean = sum(length) / m.no_elements
     # e_length_mean = round(e_length_mean, digits=2)
-    e_length_min = minimum(area)
-    e_length_max = maximum(area)
+    e_length_min = minimum(length)
+    e_length_max = maximum(length)
     if printit
         println("Element length:")
         println("    Mean: ", e_length_mean)
         println("    Min: ", e_length_min)
         println("    Max: ", e_length_max)
-    else
-        return t_max, t_min, t_mean_occ, n_occ/n_all
-    end 
+    end
+    
+    return e_length_max, e_length_min, e_length_mean
 end
