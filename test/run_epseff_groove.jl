@@ -5,13 +5,7 @@ Pkg.instantiate()
 using RadMod2D
 
 include("./models2D.jl")
-include("./plot2D.jl")
 
-using CairoMakie
-CairoMakie.activate!(type = "svg")
-filetype = ".svg"
-# CairoMakie.activate!(type = "png")
-# filetype = ".png"
 
 function epsilon_effective_groove()
     # infinetely long round groove
@@ -29,12 +23,12 @@ function epsilon_effective_groove()
     epsilon_ink = 0.01
     eps_eff = Matrix{Float64}(undef,round(Integer,1.0/epsilon_ink),2*size(case,1))
     for i = 1:(size(case,1))
-        m = model_circle_with_opening_line(2.0, 360, round(Integer,case[i,2]))
+        m = model_circle_with_opening_line_centered(2.0, 360, round(Integer,case[i,2]))
         # vfmat calculation
-        vfmat = zeros(Float64, m.nelem, m.nelem)
+        vfmat = zeros(Float64, m.no_elements, m.no_elements)
         existing_vf!(m, vfmat)
         n = 30
-        dx, dy = create_tiles(m, n)
+        dx, dy = get_tile_dimensions(m, n)
         @time t_occ = check_tile_occupation(m, dx, dy, n)
         @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
         calculating_vf!(m, vfmat, normit = true)
@@ -88,7 +82,7 @@ function plot_epseff_groove_allinone()
     # cant calculate last position with phi = 1.0 therefore using 0.999
     m = Vector{Model}(undef,size(case,1))
     for i = 1:size(case,1)
-        m[i] = model_circle_with_opening_line(2.0, 360, round(Integer,case[i,2]))
+        m[i] = model_circle_with_opening_line_centered(2.0, 360, round(Integer,case[i,2]))
     end
     # arrangement in figure
     col = 2
@@ -110,7 +104,7 @@ function plot_epseff_groove_allinone()
     for i = 1:size(case,1)
         ax = fig[arr[i,1], arr[i,2]] = Axis(fig)
         linewidth = 1.0
-        setup_axis(ax, linewidth)
+        setup_axis!(ax, linewidth)
         ax.xlabel = "X in m"
         ax.ylabel = "Y in m"
         ax.aspect = DataAspect()
@@ -133,13 +127,13 @@ function plot_epseff_groove()
             0.9999 357.19] 
     # cant calculate last position with phi = 1.0 therefore using 0.999
     i = 4
-    m = model_circle_with_opening_line(2.0, 360, round(Integer,case[i,2]))
+    m = model_circle_with_opening_line_centered(2.0, 360, round(Integer,case[i,2]))
     @show m.elem2par
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 15)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()

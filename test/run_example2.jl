@@ -4,13 +4,6 @@ Pkg.activate(".")
 using RadMod2D
 
 include("./models2D.jl")
-include("./plot2D.jl")
-
-# backend
-# using GLMakie
-using CairoMakie
-CairoMakie.activate!(type = "svg")
-filetype = ".svg"
 
 # parameter
 r1x = 0.8
@@ -32,18 +25,18 @@ ax1.aspect = DataAspect()
 plot_model(fig1, ax1, m, shownvec = true, shownodes = false, showcom = false, showleg = true, legpos = "right", linewidth = 1.5)
 
 # view factors
-vfmat = zeros(Float64, m.nelem, m.nelem)
+vfmat = zeros(Float64, m.no_elements, m.no_elements)
 existing_vf!(m, vfmat)
-dx, dy = create_tiles(m, n)
+dx, dy = get_tile_dimensions(m, n)
 t_occ = check_tile_occupation(m, dx, dy, n)
 blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
 calculating_vf!(m, vfmat, normit = true)
 
 # net radiation method
-epsilon = zeros(m.nelem,1)
+epsilon = zeros(m.no_elements,1)
 set_bc_part!(m, epsilon, 1, 0.3)
 set_bc_part!(m, epsilon, 2, 0.6)
-temp = zeros(m.nelem,1)
+temp = zeros(m.no_elements,1)
 set_bc_part!(m, temp, 1:2, 300)
 temp[79:106,1] .= 600 # bc for specific elements
 @time Q, G = tempsolver(m, vfmat, temp, epsilon)

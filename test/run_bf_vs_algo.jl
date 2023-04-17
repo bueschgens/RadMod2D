@@ -7,13 +7,7 @@ Pkg.instantiate()
 using RadMod2D
 
 include("./models2D.jl")
-include("./plot2D.jl")
 
-using CairoMakie
-CairoMakie.activate!(type = "svg")
-filetype = ".svg"
-# CairoMakie.activate!(type = "png")
-# filetype = ".png"
 
 function calc_view2D_algo_n_study(;elemsize = 0.05)
     # calculating blocking with tiles 
@@ -29,9 +23,9 @@ function calc_view2D_algo_n_study(;elemsize = 0.05)
     for i = 1:size(n_study,1)
         n = n_study[i]
         println("my algorithm running with ", n)
-        vfmat = zeros(Float64, m.nelem, m.nelem)
+        vfmat = zeros(Float64, m.no_elements, m.no_elements)
         existing_vf!(m, vfmat)
-        dx, dy = create_tiles(m, n)
+        dx, dy = get_tile_dimensions(m, n)
         stats_tiles = @timed t_occ = check_tile_occupation(m, dx, dy, n)
         stats_calc = @timed blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
         # calculating_vf!(m, vfmat, normit = false)
@@ -63,7 +57,7 @@ function fig_n_study_mesh2D_allinone()
         for j = 1:2
             ax = fig[i, j] = Axis(fig)
             linewidth = 1.0
-            setup_axis(ax, linewidth)
+            setup_axis!(ax, linewidth)
             ax.xlabel = "X in m"
             ax.ylabel = "Y in m"
             ax.aspect = DataAspect()

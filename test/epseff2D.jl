@@ -11,18 +11,18 @@ inside functions
 function get_epsilon_effective(m, mat, p_hole; epsilon_ink = 0.1)
     # calculate epsilon effective
     # hole is part with epsilon effective / encl is enclosure
-    p_encl = collect(1:m.npar)
+    p_encl = collect(1:m.no_parts)
     filter!(x->x != p_hole, p_encl)
     temp_encl = 0
     temp_hole = 1000 # Kelvin
-    temp = zeros(m.nelem,1)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, p_hole, temp_hole)
     set_bc_part!(m, temp, p_encl, temp_encl)
     epsilon_hole = 1.0
     n_epsilon_encl = round(Integer,1.0/epsilon_ink)
     epsilon_encl = Matrix{Float64}(undef,n_epsilon_encl,2)
     epsilon_encl[:,1] = [epsilon_ink*i for i =1:n_epsilon_encl]
-    epsilon = zeros(m.nelem,1)
+    epsilon = zeros(m.no_elements,1)
     set_bc_part!(m, epsilon, p_hole, epsilon_hole)
     for i = 1:n_epsilon_encl
         set_bc_part!(m, epsilon, p_encl, epsilon_encl[i,1])

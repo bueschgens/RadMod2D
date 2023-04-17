@@ -5,7 +5,6 @@ Pkg.instantiate()
 using RadMod2D
 
 include("./models2D.jl")
-include("./plot2D.jl")
 
 using CairoMakie
 CairoMakie.activate!(type = "svg")
@@ -14,12 +13,12 @@ filetype = ".svg"
 # filetype = ".png"
 
 function fig_c1_mesh2D()
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -37,12 +36,12 @@ function fig_c1_mesh2D_legend()
     # leg.rowgap = 0.1
     # leg.colgap = 8
     # for copy in mesh2D()
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -53,12 +52,12 @@ function fig_c1_mesh2D_legend()
 end
 
 function fig_c1_view2D_existing_2elem()
-    m = model_circle_in_circle(0.8, 1.6, 0.1)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.1)
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -78,15 +77,15 @@ function fig_c1_view2D_existing_2elem()
 end
 
 function fig_c1_view2D_existing1()
-    m = model_circle_in_circle(0.8, 1.6, 0.1)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.1)
     #### vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     @time existing_vf!(m, vfmat)
     #### 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -97,19 +96,19 @@ function fig_c1_view2D_existing1()
 end
 
 function fig_c1_view2D_existing2()
-    m = model_circle_in_circle(0.8, 1.6, 0.1)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.1)
     #### vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     @time existing_vf!(m, vfmat)
     n = 10
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     #### 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -120,18 +119,18 @@ function fig_c1_view2D_existing2()
 end
 
 function fig_c1_view2D_blocking_occ()
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
     # create tiles
     n = 15
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
     plot_empty_tiles(fig, ax, dx, dy, n, linewidth = linewidth)
@@ -141,24 +140,28 @@ function fig_c1_view2D_blocking_occ()
 end
 
 function fig_c1_view2D_blocking_2elem_tiles()
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
     # create tiles
     n = 15
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     # plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
     # elem pair check
     i1 = 90
     i2 = 150
-    isexisting = existing_vf_2elem(m, i1, i2)
+    isexisting = are_elements_facing(m, m.elements[i1], m.elements[i2])
+
+    (isexisting ? println("is existing between ", i1, " and ", i2) : 
+            println("is not existing between ", i1, " and ", i2))
+
     if isexisting
         blocking_vf_with_tiles_2elem_tiles(fig, ax, i1, i2, m, dx, dy, n, t_occ)
     end
@@ -173,24 +176,29 @@ function fig_c1_view2D_blocking_2elem_tiles()
 end
 
 function fig_c1_view2D_blocking_2elem()
-    m = model_circle_in_circle(0.8, 1.6, 0.05)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.05)
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
     # create tiles
     n = 15
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     plot_occupied_tiles(fig, ax, dx, dy, n, t_occ)
     # elem pair check
     i1 = 90
     i2 = 150
-    isexisting = existing_vf_2elem(m, i1, i2)
+    isexisting = are_elements_facing(m, m.elements[i1], m.elements[i2])
+
+    (isexisting ? println("is existing between ", i1, " and ", i2) : 
+            println("is not existing between ", i1, " and ", i2))
+
+
     if isexisting
         blocking_vf_with_tiles_2elem(fig, ax, i1, i2, m, dx, dy, n, t_occ)
     end
@@ -209,8 +217,8 @@ function fig_c1_view2D_blocking_2elem()
 end
 
 function fig_c1_therm2D_temp()
-    m = model_circle_in_circle(0.8, 1.6, 0.02)
-    temp = zeros(m.nelem,1)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.02)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1, 300)
     set_bc_part!(m, temp, 2, 400)
     # bc for some elements
@@ -219,7 +227,7 @@ function fig_c1_therm2D_temp()
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -230,17 +238,17 @@ function fig_c1_therm2D_temp()
     # for i = 1:m.nnodes
     #     println(m.nodes[i].x, ";", m.nodes[i].y)
     # end
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(m.elem[i].node1, ";", m.elem[i].node2, ";", m.elem[i].com, ";", m.elem[i].nvec, ";", m.elem[i].area)
     # end
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(temp[i,:])
     # end
 end
 
 function fig_c1_therm2D_temp_legend()
-    m = model_circle_in_circle(0.8, 1.6, 0.02)
-    temp = zeros(m.nelem,1)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.02)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1, 300)
     set_bc_part!(m, temp, 2, 400)
     # bc for some elements
@@ -249,7 +257,7 @@ function fig_c1_therm2D_temp_legend()
     fig = Figure(resolution = (500, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -267,33 +275,33 @@ function fig_c1_therm2D_temp_legend()
 end
 
 function fig_c1_therm2D_qrad()
-    m = model_circle_in_circle(0.8, 1.6, 0.02)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.02)
     # vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
     n = 15
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     calculating_vf!(m, vfmat, normit = true)
     # solve Qp
-    epsilon = zeros(m.nelem,1)
+    epsilon = zeros(m.no_elements,1)
     set_bc_part!(m, epsilon, 1, 0.9)
     set_bc_part!(m, epsilon, 2, 0.5)
-    temp = zeros(m.nelem,1)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1, 300)
     set_bc_part!(m, temp, 2, 400)
     # bc for some elements
     temp[189:313,1] .= 600
     @time Qp, G = tempsolver(m, vfmat, temp, epsilon)
-    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.npar]
+    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.no_parts]
     area = [m.elem[i].area for i = m.elem2par[1].first:m.elem2par[end].last]
     qp_area = Qp[:] ./ area[:]
     # 2D plot
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -301,32 +309,32 @@ function fig_c1_therm2D_qrad()
     # cbar.ticks = -80:20:60
     # display(fig)
     save("fig_c1_therm2D_qrad"*filetype, fig)
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(qp_area[i,:])
     # end
 end
 
 function fig_c1_therm2D_qrad_legend()
-    m = model_circle_in_circle(0.8, 1.6, 0.02)
+    m = model_circle_in_circle_centered(0.8, 1.6, 0.02)
     # vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
     n = 15
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     t_occ = check_tile_occupation(m, dx, dy, n)
     blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     calculating_vf!(m, vfmat, normit = true)
     # solve Qp
-    epsilon = zeros(m.nelem,1)
+    epsilon = zeros(m.no_elements,1)
     set_bc_part!(m, epsilon, 1, 0.9)
     set_bc_part!(m, epsilon, 2, 0.5)
-    temp = zeros(m.nelem,1)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1, 300)
     set_bc_part!(m, temp, 2, 400)
     # bc for some elements
     temp[189:313,1] .= 600
     @time Qp, G = tempsolver(m, vfmat, temp, epsilon)
-    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.npar]
+    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.no_parts]
     area = [m.elem[i].area for i = m.elem2par[1].first:m.elem2par[end].last]
     qp_area = Qp[:] ./ area[:]
     qp_area_kw = qp_area ./ 1000
@@ -334,7 +342,7 @@ function fig_c1_therm2D_qrad_legend()
     fig = Figure(resolution = (270, 270), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -352,16 +360,16 @@ function fig_c1_therm2D_qrad_legend()
 end
 
 function calc_c1_view2D(;elemsize = 0.05)
-    m = model_circle_in_circle(0.8, 1.6, elemsize)
+    m = model_circle_in_circle_centered(0.8, 1.6, elemsize)
     #### vfmat calculation
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     @time existing_vf!(m, vfmat)
     n = 15
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     @time calculating_vf!(m, vfmat, normit = false)
-    vfmatp = vfmat_to_parts(m, vfmat, normit = false)
+    vfmatp = compact_vfmat_to_parts(m, vfmat, normit = false)
     vfmatp
 end
 

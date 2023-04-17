@@ -5,10 +5,8 @@ Pkg.instantiate()
 using RadMod2D
 
 include("./models2D.jl")
-include("./plot2D.jl")
 
-using CairoMakie
-CairoMakie.activate!(type = "svg")
+
 filetype = ".svg"
 # CairoMakie.activate!(type = "png")
 # filetype = ".png"
@@ -17,24 +15,24 @@ function fig_corridor_therm2D_eps(eps_lab)
     # test blocking with shadow plot
     m = model_labyrinth([0.4, -0.4, 0.4, 0.2, 0.5, -0.3, -0.2], 0.1, 0.02)
     # blocking with tilewalk
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
     n = 30
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     @time calculating_vf!(m, vfmat, normit = true)
     # solve Qp
-    temp = zeros(m.nelem,1)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1, 600)
-    set_bc_part!(m, temp, 2:m.npar, 400)
+    set_bc_part!(m, temp, 2:m.no_parts, 400)
     # eps = 1.0
-    epsilon = zeros(m.nelem,1)
+    epsilon = zeros(m.no_elements,1)
     set_bc_part!(m, epsilon, 1, 1.0)
-    set_bc_part!(m, epsilon, 2:(m.npar-1), eps_lab)
-    set_bc_part!(m, epsilon, m.npar, 1.0)
+    set_bc_part!(m, epsilon, 2:(m.no_parts-1), eps_lab)
+    set_bc_part!(m, epsilon, m.no_parts, 1.0)
     @time Qp, G = tempsolver(m, vfmat, temp, epsilon)
-    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.npar]
+    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.no_parts]
     println("heat flux start of labyrith: ", Qp_parts[1])
     println("heat flux end of labyrith: ", Qp_parts[end])
     # lab_min = minimum(Qp[m.elem2par[2].first:m.elem2par[end].last,1])
@@ -55,7 +53,7 @@ function fig_corridor_therm2D_eps(eps_lab)
     fig = Figure(resolution = (270, 400), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -79,10 +77,10 @@ function fig_corridor_therm2D_eps(eps_lab)
     # for i = 1:m.nnodes
     #     println(m.nodes[i].x, ";", m.nodes[i].y)
     # end
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(m.elem[i].node1, ";", m.elem[i].node2, ";", m.elem[i].com, ";", m.elem[i].nvec, ";", m.elem[i].area)
     # end
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(temp[i,:], ";", epsilon[i,:], ";", qp_area_kw_mod[i,:])
     # end
 end

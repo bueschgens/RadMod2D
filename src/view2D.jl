@@ -1,35 +1,20 @@
-#= ######################################################
-fct for struct
-###################################################### =# 
+"""
+line_segment_intersection(p1::Point2D{T}, p2::Point2D{T}, p3::Point2D{T}, 
+        p4::Point2D{T})::Bool where T<:AbstractFloat
 
-function dot(v1::Point2D{T}, v2::Point2D{T}) where T<:AbstractFloat
-    d = v1.x * v2.x + v1.y * v2.y
-    return d
-end
+Check if two 2D line segments (p1 -> p2) and (p3 -> p4) are intersecting each other.
 
-#= ######################################################
-inside functions
-###################################################### =# 
+#Arguments
+- `p1::Point2D{T}`: first point of first line segment
+- `p2::Point2D{T}`: second point of first line segment
+- `p3::Point2D{T}`: first point of second line segment
+- `p4::Point2D{T}`: second point of second line segment
 
-function get_angle(v1::Point2D{T},v2::Point2D{T}) where T<:AbstractFloat
-    # calculate angle between two vectors
-    EPSILON = 1E-8
-    cosval = dot(v1,v2) / (norm(v1) * norm(v2))
-    if cosval < -1 || cosval > 1
-        if cosval > (-1 - EPSILON) && cosval < -1
-            cosval = -1
-        elseif cosval < (1 + EPSILON) && cosval > 1
-            cosval = 1
-        else
-            error("custom error message: cosval in fct: get_angle")
-        end
-    end
-    phir = acos(cosval)
-    #phid = phir * 180 / pi
-    return phir
-end
-
-function line_segment_intersection(p1::Point2D{T}, p2::Point2D{T}, p3::Point2D{T}, p4::Point2D{T}) where T<:AbstractFloat
+#Returns
+- `hit::Bool`: true if line segments are intersecting, false otherwise
+"""
+function line_segment_intersection(p1::Point2D{T}, p2::Point2D{T}, p3::Point2D{T}, 
+        p4::Point2D{T})::Bool where T<:AbstractFloat
     # check if two 2D line segments are intersecting
     hit = false
     x1 = p1.x
@@ -51,79 +36,79 @@ function line_segment_intersection(p1::Point2D{T}, p2::Point2D{T}, p3::Point2D{T
     return hit
 end
 
-function line_segment_intersection_test(p1::Point2D{T}, p2::Point2D{T}, p3::Point2D{T}, p4::Point2D{T}) where T<:AbstractFloat
-    # check if two 2D line segments are intersecting
-    #print("intersection check")
-    x1 = p1.x
-    x2 = p2.x
-    x3 = p3.x
-    x4 = p4.x
-    y1 = p1.y
-    y2 = p2.y
-    y3 = p3.y
-    y4 = p4.y
-    denom = ((y2-y1)*(x3-x4)-(x2-x1)*(y3-y4))
-    #print("denominator = ",denom)
-    if denom == 0
-        #print("no intersection -> parallel vectors")
-        return false
-    else
-        t = ((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/denom
-        u = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/denom
-        #print("t = ",t,"; u = ",u)
-        if t >= 0.0 && t <= 1.0
-            # pointX = x1+t*(x2-x1)
-            # pointY = y1+t*(y2-y1)
-            if u >= 0.0 && u <= 1.0
-                # pointX = x3+u*(x4-x3)
-                # pointY = y3+u*(y4-y3)
-                # print("intersection at ",point)
-                #plt.plot((x1,x2), (y1,y2))
-                #plt.plot((x3,x4), (y3,y4))
-                #plt.plot(point[0],point[1],'r+')
-                return true
-            else
-                return false
-            end
-        else
-            return false
-        end
-    end
+
+
+"""
+    is_line_segment_inside_tile_BB(n1::Point2D{T}, n2::Point2D{T}, tmin_x::T, tmax_x::T, 
+        tmin_y::T, tmax_y::T)::Bool where T<:AbstractFloat
+
+Checks if line segment (n1 -> n2) is inside tile with bounding box (tmin_x, tmax_x,
+tmin_y, tmax_y).
+
+#Arguments
+- `n1::Point2D{T}`: first point of line segment
+- `n2::Point2D{T}`: second point of line segment
+- `tmin_x::T`: minimum x coordinate of tile bounding box
+- `tmax_x::T`: maximum x coordinate of tile bounding box
+- `tmin_y::T`: minimum y coordinate of tile bounding box
+- `tmax_y::T`: maximum y coordinate of tile bounding box
+
+#Returns
+- `is_inside::Bool`: true if line segment is inside tile bounding box, false otherwises
+"""
+function is_line_segment_inside_tile_BB(n1::Point2D{T}, n2::Point2D{T}, tmin_x::T, tmax_x::T, 
+        tmin_y::T, tmax_y::T)::Bool where T<:AbstractFloat
+
+    box1 = @SVector [min(n1.x, n2.x), max(n1.x, n2.x), min(n1.y, n2.y), max(n1.y, n2.y)]
+    box2 = @SVector[tmin_x, tmax_x, tmin_y, tmax_y]
+    return is_overlapping2D(box1, box2)
 end
 
-function is_inside_tile_BB(n1::Point2D{T}, n2::Point2D{T}, tmin_x::T, tmax_x::T, tmin_y::T, tmax_y::T) where T<:AbstractFloat
-    # check if element e is inside tile with bounding box
-    box1 = @SMatrix [min(n1.x, n2.x) max(n1.x, n2.x); min(n1.y, n2.y) max(n1.y, n2.y)]
-    box2 = @SMatrix [tmin_x tmax_x; tmin_y tmax_y]
-    return isOverlapping2D(box1, box2)
-end
 
-function isOverlapping2D(box1,box2)
-    # box1 = (x:(xmin1,xmax1),y:(ymin1,ymax1))
-    # box2 = (x:(xmin2,xmax2),y:(ymin2,ymax2))
-    # isOverlapping2D(box1,box2)
-    # = isOverlapping1D(box1.x, box2.x) and 
-    #   isOverlapping1D(box1.y, box2.y)
-    box1x = @view box1[1,:]
-    box1y = @view box1[2,:]
-    box2x = @view box2[1,:]
-    box2y = @view box2[2,:]
+
+"""
+    is_overlapping2D(box1::Vector{T}, box2::Vector{T}) where T <: AbstractFloat
+
+Checks if two 2D bounding boxes are overlapping.
+
+#Arguments
+- `box1::Vector{T}`: first bounding box = [xmin, xmax; ymin, ymax]
+- `box2::Vector{T}`: second bounding box = [xmin, xmax; ymin, ymax]
+
+"""
+function is_overlapping2D(box1::SVector{4,T}, box2::SVector{4,T})::Bool where T <: AbstractFloat
+
+    box1x = @view box1[1:2]
+    box1y = @view box1[3:4]
+    box2x = @view box2[1:2]
+    box2y = @view box2[3:4]
     inside = false
-    if isOverlapping1D(box1x, box2x) && isOverlapping1D(box1y, box2y)
+    if is_overlapping1D(box1x, box2x) && is_overlapping1D(box1y, box2y)
         inside = true
     end
     return inside
 end
 
-function isOverlapping1D(box1,box2)
-    # box1 = (xmin1, xmax1)
-    # box2 = (xmin2, xmax2)
-    # isOverlapping1D(box1,box2) 
-    # = xmax1 >= xmin2 and xmax2 >= xmin1
-    xmin1 = box1[1]
-    xmax1 = box1[2]
-    xmin2 = box2[1]
-    xmax2 = box2[2]
+
+
+"""
+    is_overlapping1D(a1::Vector{T}, a2::Vector{T})::Bool where T <: AbstractFloat
+
+Checks if two 1D bounding "areas" are overlapping. Areas are defined by box1 = [xmin, xmax]
+and box2 = [xmin, xmax].
+
+#Arguments
+- `box1::Vector{T}`: first bounding line = [xmin, xmax]
+- `box2::Vector{T}`: second bounding line = [xmin, xmax]
+
+#Returns
+- `inside::Bool`: true if 1D "areas" are overlapping, false otherwise
+"""
+function is_overlapping1D(a1,a2)::Bool
+    xmin1 = a1[1]
+    xmax1 = a1[2]
+    xmin2 = a2[1]
+    xmax2 = a2[2]
     inside = false
     if xmax1 >= xmin2 && xmax2 >= xmin1
         inside = true
@@ -131,52 +116,104 @@ function isOverlapping1D(box1,box2)
     return inside
 end
 
-function get_area_of_part(m, p)
+
+
+"""
+    get_area_of_part(m::AbstractModel, idx_part::Integer)
+
+Calculates the area of a part.
+
+#Arguments
+- `m::AbstractModel`: model
+- `idx_part::Integer`: index of part
+
+#Returns
+- `area`: area of part
+
+"""
+function get_area_of_part(m::ConstModel, idx_part::Integer)::AbstractFloat
     # returns the area of part p
-    e1 = m.elem2par[p].first
-    e2 = m.elem2par[p].last
+    start_element_of_part = m.elem2par[idx_part].first
+    last_element_of_part = m.elem2par[idx_part].last
     # println("calculate area between elements ", e1, " and ", e2)
-    a = 0.0
-    for i = e1:e2
-        a += m.elem[i].area
+    area = 0.0
+    for i = start_element_of_part:last_element_of_part
+        area += m.elements[i].length
     end
-    return a
+
+    return area
 end
 
-#= ######################################################
-final functions
-###################################################### =# 
 
-function existing_vf!(m::Model, mat)
-    # check if elements are faced towards each other
-    # angle between nvec and connector < 90°
-    for i1 = 1:m.nelem, i2 = (i1+1):m.nelem
-        con = m.elem[i2].com - m.elem[i1].com
-        phir1 = get_angle(m.elem[i1].nvec,con)
-        phir2 = get_angle(m.elem[i2].nvec,con*(-1))
-        tol = 1E-8
-        if phir1 < (pi/2 - tol) && phir2 < (pi/2 - tol)
-            mat[i1,i2] = 1
-            mat[i2,i1] = 1
+
+"""
+    are_elements_facing(e1::ConstLineElement, e2::ConstLineElement)::Bool
+
+Checks if two elements are facing towards each other. Returns true if the angle between
+the normal vector of the elements e1 and e2 and the connector is smaller than 90°.
+
+#Arguments
+- `e1::ConstLineElement`: first element
+- `e2::ConstLineElement`: second element
+"""
+function are_elements_facing(e1::ConstLineElement, e2::ConstLineElement)::Bool
+    con = e2.com - e1.com
+    phir1 = get_angle(e1.norm_vec,con)
+    phir2 = get_angle(e2.norm_vec,con*(-1))
+    tol = 1E-8
+
+    if phir1 < (pi/2 - tol) && phir2 < (pi/2 - tol)
+        return true
+    end  
+    
+    return false
+end
+
+
+
+"""
+    existing_vf!(m::ConstModel, vfmat::Matrix{T})::Nothing where T <: AbstractFloat
+
+Checks if element pairs are facing towards each, which means that they theoretically can see
+each other if nothing is blocking them and sets the corresponding entry in the passed
+blocking matrix to 1 (no blocking), if so. Should be used as initializer for the other
+blocking methods.
+"""
+function existing_vf!(m::ConstModel, 
+            vfmat::Matrix{T})::Nothing where T <: AbstractFloat
+
+    for i1 = 1:m.no_elements, i2 = (i1+1):m.no_elements
+        if are_elements_facing(m.elements[i1], m.elements[i2])
+            vfmat[i1,i2] = 1.0
+            vfmat[i2,i1] = 1.0
         end
     end
 end
 
-function blocking_vf!(m::Model, mat)
-    # check if element pairs are blocked by others with brute force method
-    for i1 = 1:m.nelem, i2 = (i1+1):m.nelem
-        if mat[i1,i2] == 1
-            for ib in 1:m.nelem
+
+
+"""
+    blocking_vf_brute_force!(m::ConstModel, vfmat::vfmat{T})::Nothing where T <: AbstractFloat
+
+Checks if element pairs are blocked by others with brute force method. Sets the
+corresponding entry in the passed blocking matrix to 0 (blocking), if so. This method is
+very slow (O ~ n^3) and should only be used for small models. 
+"""
+function blocking_vf_brute_force!(m::ConstModel, 
+    vfmat::Matrix{T})::Nothing where T <: AbstractFloat
+
+    for i1 = 1:m.no_elements, i2 = (i1+1):m.no_elements
+        if isapprox(vfmat[i1,i2], 1.0)
+            for ib in 1:m.no_elements
                 if ib != i1 && ib != i2
-                    p1 = m.elem[i1].com
-                    p2 = m.elem[i2].com
-                    p3 = m.nodes[m.elem[ib].node1]
-                    p4 = m.nodes[m.elem[ib].node2]
+                    p1 = m.elements[i1].com
+                    p2 = m.elements[i2].com
+                    p3 = m.nodes[m.elements[ib].no_node1]
+                    p4 = m.nodes[m.elements[ib].no_node2]
                     blocked = line_segment_intersection(p1, p2, p3, p4)
                     if blocked
-                        # println(i1," and ",i2," intersected by ",ib)
-                        mat[i1,i2] = 0
-                        mat[i2,i1] = 0
+                        vfmat[i1,i2] = 0
+                        vfmat[i2,i1] = 0
                         break
                     end
                 end
@@ -185,19 +222,41 @@ function blocking_vf!(m::Model, mat)
     end
 end
 
-function create_tiles(m::Model, n::Integer)::Tuple{Float64,Float64}
+
+
+"""
+    get_tile_dimensions(m::ConstModel, n::Integer)::Tuple
+
+Gets a tiling of the model with n x n tiles. Returns the dimensions of a single
+tile delta_x and delta_y.
+
+"""
+function get_tile_dimensions(m::ConstModel, n::Integer)::Tuple
     # create tiles based on model nodes
     # get min and max x and y of nodes
-    nmin, nmax = get_nodes_min_and_max(m)
-    dx = (nmax.x - nmin.x) / n
-    dy = (nmax.y - nmin.y) / n
-    return dx, dy
+    nmin, nmax = get_min_max_coordinates(m)
+    delta_x = (nmax.x - nmin.x) / n
+    delta_y = (nmax.y - nmin.y) / n
+    return delta_x, delta_y
 end
 
-function check_tile_occupation(m::Model, dx::T1, dy::T1, n::T2; blockparts = 1:m.npar)::Matrix{Union{Vector{T2},Missing}} where {T1<:AbstractFloat, T2<:Integer}
-    # tile sorting
-    t_occ = Matrix{Union{Vector{T2},Missing}}(missing,n,n)
-    e_in_tile = Vector{T2}(undef,m.nelem) # empty vec for appending
+
+
+"""
+    check_tile_occupation(m::ConstModel{T1, T2}, dx::T2, dy::T2, n::T1; blockparts::Vector{T1} = 1:m.no_parts)::Matrix{Union{Vector{T1},Missing}} where {T1<:Integer, T2<:AbstractFloat}
+
+Returns a matrix of size n x n type Union{Vector, Missing}. If not missing the vector
+contains the indices of the elements that are within the tile. 
+"""
+function check_tile_occupation(m::ConstModel{T1, T2}, dx::T2, dy::T2, n::T1; 
+            blockparts=1:m.no_parts)::Matrix{Union{Vector{T1},Missing}} where {T1<:Integer, T2<:AbstractFloat}
+    
+    # contains the elements that are in the tile for each tile in n x n tiles
+    t_occ = Matrix{Union{Vector{T1}, Missing}}(missing, n, n)
+
+    # contains the tile that has the element
+    element_inside_tile_no = Vector{T1}(undef, m.no_elements)
+
     for t1 = 1:n
         for t2 = 1:n
             tmin_x = dx*(t1-1)
@@ -209,32 +268,36 @@ function check_tile_occupation(m::Model, dx::T1, dy::T1, n::T2; blockparts = 1:m
                 e1 = m.elem2par[p].first
                 e2 = m.elem2par[p].last
                 for i = e1:e2
-                    node1 = m.nodes[m.elem[i].node1]
-                    node2 = m.nodes[m.elem[i].node2]
-                    if is_inside_tile_BB(node1, node2, tmin_x, tmax_x, tmin_y, tmax_y)
-                        # println("tile (",t1,",",t2,") --> ",i)
+                    no_node1 = m.nodes[m.elements[i].no_node1]
+                    no_node2 = m.nodes[m.elements[i].no_node2]
+                    if is_line_segment_inside_tile_BB(no_node1, no_node2, tmin_x, 
+                                tmax_x, tmin_y, tmax_y)
                         hit += 1
-                        e_in_tile[hit] = i
+                        element_inside_tile_no[hit] = i
                     end
                 end
             end
             if hit > 0
-                t_occ[t1,t2] = e_in_tile[1:hit]
+                t_occ[t1,t2] = element_inside_tile_no[1:hit]
             end
         end
     end
     return t_occ
 end
 
-function blocking_vf_with_tiles!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}) where {T1<:AbstractFloat, T2<:Integer}
+
+
+function blocking_vf_with_tiles!(m::ConstModel, mat, dx::T1, dy::T1, n::T2, 
+            t_occ::Matrix{Union{Vector{T2},Missing}})::Nothing where {T1<:AbstractFloat, T2<:Integer}
+
     # check if element pairs are blocked by others with tiles
     max_steps = get_max_steps(n)
     tiles = Vector{Index2D{T2}}(undef,max_steps)
-    @inbounds for i1 = 1:m.nelem, i2 = (i1+1):m.nelem
+    @inbounds for i1 = 1:m.no_elements, i2 = (i1+1):m.no_elements
         # println("--------> checking ",i1," and ",i2)
-        p1 = m.elem[i1].com
-        p2 = m.elem[i2].com
-        if mat[i1,i2] == 1
+        p1 = m.elements[i1].com
+        p2 = m.elements[i2].com
+        if isapprox(mat[i1,i2], 1.0)
             # first tilewalk and get all tiles between i1 and i2
             ntiles = tilewalk_with_return!(tiles, p1, p2, dx, dy, n)
             hitten = false
@@ -246,8 +309,8 @@ function blocking_vf_with_tiles!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Ma
                     for it in t_occ[t.x,t.y]
                         if it != i1 && it != i2
                             # println("------> ",i1," and ",i2, " checking with ",it)
-                            p3 = m.nodes[m.elem[it].node1]
-                            p4 = m.nodes[m.elem[it].node2]
+                            p3 = m.nodes[m.elements[it].no_node1]
+                            p4 = m.nodes[m.elements[it].no_node2]
                             blocked = line_segment_intersection(p1, p2, p3, p4)
                             if blocked
                                 # println("----------------> ",i1," and ",i2," intersected by ",it)
@@ -267,17 +330,19 @@ function blocking_vf_with_tiles!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Ma
     end
 end
 
-function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}; elem_in_t = 12::T2, skipped_t::T2 = 2) where {T1<:AbstractFloat, T2<:Integer}
+
+
+function blocking_vf_with_tiles_simplified!(m::ConstModel, vfmat::Matrix{T1}, dx::T1, dy::T1, n::T2, t_occ::Matrix{Union{Vector{T2},Missing}}; elem_in_t = 12::T2, skipped_t::T2 = 2) where {T1<:AbstractFloat, T2<:Integer}
     # check if element pairs are blocked by others with tiles
     max_steps = get_max_steps(n)
     tiles = Vector{Index2D{T2}}(undef,max_steps)
     count_simp = 0
     count_all = 0
-    @inbounds for i1 = 1:m.nelem, i2 = (i1+1):m.nelem
+    @inbounds for i1 = 1:m.no_elements, i2 = (i1+1):m.no_elements
         # println("--------> checking ",i1," and ",i2)
-        p1 = m.elem[i1].com
-        p2 = m.elem[i2].com
-        if mat[i1,i2] == 1
+        p1 = m.elements[i1].com
+        p2 = m.elements[i2].com
+        if isapprox(vfmat[i1,i2],1.0)
             # first tilewalk and get all tiles between i1 and i2
             ntiles = tilewalk_with_return!(tiles, p1, p2, dx, dy, n)
             hitten = false
@@ -291,13 +356,13 @@ function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2
                         for it in t_occ[t.x,t.y]
                             if it != i1 && it != i2
                                 # println("------> ",i1," and ",i2, " checking with ",it)
-                                p3 = m.nodes[m.elem[it].node1]
-                                p4 = m.nodes[m.elem[it].node2]
+                                p3 = m.nodes[m.elements[it].no_node1]
+                                p4 = m.nodes[m.elements[it].no_node2]
                                 blocked = line_segment_intersection(p1, p2, p3, p4)
                                 if blocked
                                     # println("----------------> ",i1," and ",i2," intersected by ",it)
-                                    mat[i1,i2] = 0
-                                    mat[i2,i1] = 0
+                                    vfmat[i1,i2] = 0.0
+                                    vfmat[i2,i1] = 0.0
                                     hitten = true
                                     break
                                 end
@@ -305,8 +370,8 @@ function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2
                         end
                     else
                         # println("----------------> SIMPLIFIED -> ",i1," and ",i2," intersected by ",it)
-                        mat[i1,i2] = 0
-                        mat[i2,i1] = 0
+                        vfmat[i1,i2] = 0.0
+                        vfmat[i2,i1] = 0.0
                         count_simp += 1
                     end
                 end
@@ -320,15 +385,33 @@ function blocking_vf_with_tiles_simplified!(m::Model, mat, dx::T1, dy::T1, n::T2
     println("simplification rate: ", round(count_simp/count_all*100, digits = 2), " %")
 end
 
-function calculating_vf!(m, mat; normit = false)
+
+
+"""
+    calculating_vf!(m::ConstModel, mat::Matrix{Int64}; normit = false)
+
+Calculates the viewfactors between all element combunatations i-j where mat[j][j] == 1
+in the model `m` and stores them in the matrix `mat`.
+
+# Arguments
+- `m::ConstModel`: model
+- `mat::Matrix{Int64}`: matrix with viewfactors
+
+# Keyword Arguments
+- `normit::Bool = false`: if true, the viewfactors are normalized to 1
+
+# Returns
+- `nothing`: the viewfactors are updated within the matrix `mat`
+"""
+function calculating_vf!(m::ConstModel, mat::Matrix{T}; normit = false)::Nothing where T <: AbstractFloat
     # calculate viewfactors if vf is existing
-    for i1 = 1:m.nelem, i2 = (i1+1):m.nelem
-        if mat[i1,i2] == 1
+    for i1 = 1:m.no_elements, i2 = (i1+1):m.no_elements
+        if isapprox(mat[i1,i2],1.0)
             # viewfactor existing
-            a = m.nodes[m.elem[i1].node1]
-            b = m.nodes[m.elem[i1].node2]
-            c = m.nodes[m.elem[i2].node1]
-            d = m.nodes[m.elem[i2].node2]
+            a = m.nodes[m.elements[i1].no_node1]
+            b = m.nodes[m.elements[i1].no_node2]
+            c = m.nodes[m.elements[i2].no_node1]
+            d = m.nodes[m.elements[i2].no_node2]
             # punkte müssen richtig sortiert sein
             # nur aus python rauskopiert - nicht mehr kontrolliert
             # hier umgangen mit betrag
@@ -352,159 +435,4 @@ function calculating_vf!(m, mat; normit = false)
     end
 end
 
-#= ######################################################
-blocking test with 2 elements
-###################################################### =# 
 
-function existing_vf_2elem(m, i1, i2)
-    # check if elements are faced towards each other
-    # angle between nvec and connector < 90°
-    exists = false
-    con = m.elem[i2].com - m.elem[i1].com
-    phir1 = get_angle(m.elem[i1].nvec,con)
-    phir2 = get_angle(m.elem[i2].nvec,con*(-1))
-    println("Angles: ", phir1, " and ", phir2)
-    tol = 1E-8
-    if phir1 < (pi/2 - tol) && phir2 < (pi/2 - tol)
-        println("is existing between ", i1, " and ", i2)
-        exists = true
-    else
-        println("is not existing between ", i1, " and ", i2)
-    end
-    return exists
-end
-
-function blocking_vf_with_tiles_2elem(fig, ax, i1, i2, m::Model, dx, dy, n::T2, t_occ) where T2<:Integer
-    # check if element pair is blocked by others with tiles
-    p1 = m.elem[i1].com
-    p2 = m.elem[i2].com
-    max_steps = get_max_steps(n)
-    tiles = Vector{Index2D{T2}}(undef,max_steps)
-    # first tilewalk and get all tiles between i1 and i2
-    ntiles = tilewalk_with_return!(tiles, p1, p2, dx, dy, n)
-    println(tiles[1:ntiles])
-    hitten = false
-    for i = 1:ntiles
-        t = tiles[i]
-        println("next tile number: ", t.x, ", ", t.y)
-        # print tile in color
-        poly!(ax, Rect((t.x-1) * dx, (t.y-1) * dy, dx, dy), color = (:grey, 0.6))
-        if !ismissing(t_occ[t.x,t.y])
-            println("------> occupied ")
-            for it in t_occ[t.x,t.y]
-                if it != i1 && it != i2
-                    println("------> ",i1," and ",i2, " checking with ",it)
-                    p3 = m.nodes[m.elem[it].node1]
-                    p4 = m.nodes[m.elem[it].node2]
-                    blocked = line_segment_intersection(p1, p2, p3, p4)
-                    if blocked
-                        println("----------------> ",i1," and ",i2," intersected by ",it)
-                        hitten = true
-                        break
-                    end
-                end
-            end
-        end
-        if hitten
-            break
-        end
-    end
-end
-
-function blocking_vf_with_tiles_2elem_tiles(fig, ax, i1, i2, m::Model, dx, dy, n::T2, t_occ) where T2<:Integer
-    # check if element pair is blocked by others with tiles
-    p1 = m.elem[i1].com
-    p2 = m.elem[i2].com
-    max_steps = get_max_steps(n)
-    tiles = Vector{Index2D{T2}}(undef,max_steps)
-    # first tilewalk and get all tiles between i1 and i2
-    ntiles = tilewalk_with_return!(tiles, p1, p2, dx, dy, n)
-    # println(tiles[1:ntiles])
-    for i = 1:ntiles
-        t = tiles[i]
-        println("next tile number: ", t.x, ", ", t.y)
-        # print tile in color
-        poly!(ax, Rect((t.x-1) * dx, (t.y-1) * dy, dx, dy), color = (:grey, 0.6))
-    end
-end
-
-#= ######################################################
-post processing of viewfactors
-###################################################### =# 
-
-function vfmat_to_parts(m, mat; normit = false)
-    # get viewfactor matrix parts out of viewfactor matrix elements
-    matp = zeros(Float64, m.npar, m.npar)
-    areap = [get_area_of_part(m, i) for i = 1:m.npar]
-    for p1 = 1:m.npar, p2 = 1:m.npar
-        vfsplit = mat[m.elem2par[p1].first:m.elem2par[p1].last, m.elem2par[p2].first:m.elem2par[p2].last]
-        acol = [m.elem[i].area for i = m.elem2par[p1].first:m.elem2par[p1].last]
-        asplit = repeat(acol, 1, (m.elem2par[p2].last-m.elem2par[p2].first+1))
-        vfsplit = vfsplit .* asplit
-        matp[p1,p2] = sum(vfsplit) / areap[p1]
-    end
-    if normit
-        controlp = sum(matp, dims=2)
-        matp .= matp ./ controlp
-    end
-    return matp
-end
-
-function save_vfmat_part_to_csv(mat, path, name; control = false)
-    # save vfmat parts to parts as csv
-    # option of saving with control sum
-    if control == true
-        control = sum(mat, dims=2)
-        mat = hcat(mat, control)
-        nparts = size(mat,1)
-        header = Matrix{String}(undef, 1, nparts+1)
-        for i = 1:nparts
-            header[1,i] = "part"*string(i)
-        end
-        header[1,end] = "control"
-    else
-        header = []
-    end
-    filename = path*"/"*name*".txt"
-    open(filename, "w") do io
-        writedlm(io, header)
-        writedlm(io, mat)
-    end
-end
-
-function get_number_of_elements_in_tiles(t_occ)
-    nx = size(t_occ,1)
-    ny = size(t_occ,2)
-    t_num = zeros(Int64, nx, ny)
-    for i = 1:nx, j = 1:ny
-        if ismissing(t_occ[i,j])
-            t_num[i,j] = 0
-        else
-            t_num[i,j] = size(t_occ[i,j],1)
-        end
-    end
-    return t_num
-end
-
-function tile_occ_analysis(t_occ; printit = true)
-    # analysis of tile occupation matrix
-    t_num = get_number_of_elements_in_tiles(t_occ)
-    t_num_v = vec(t_num)
-    t_num_v_occ = t_num_v[t_num_v[:] .> 0]
-    t_min = minimum(t_num_v_occ)
-    t_max = maximum(t_num_v_occ)
-    n_all = size(t_num_v,1)
-    n_occ = size(t_num_v_occ,1)
-    t_mean = sum(t_num_v_occ) / n_all
-    t_mean = round(t_mean, digits=1)
-    t_mean_occ = sum(t_num_v_occ) / n_occ
-    t_mean_occ = round(t_mean_occ, digits=1)
-    if printit
-        println("Tile occupation with elements:")
-        println("    Tiles occupied: ", n_occ, " / ", n_all)
-        println("    Max: ", t_max, " // Min: ", t_min)
-        println("    Mean: ", t_mean, " // Mean_occ: ", t_mean_occ)
-    else
-        return t_max, t_min, t_mean_occ, n_occ/n_all
-    end 
-end

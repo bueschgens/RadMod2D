@@ -5,37 +5,31 @@ Pkg.instantiate()
 using RadMod2D
 
 include("./models2D.jl")
-include("./plot2D.jl")
 
-using CairoMakie
-CairoMakie.activate!(type = "svg")
-filetype = ".svg"
-# CairoMakie.activate!(type = "png")
-# filetype = ".png"
 
 function fig_pinhole_therm2D_eps(eps_lab)
     # two rectangles connected with pinhole
     m = model_two_rectangles_with_holes(0.02)
     # blocking with tilewalk
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
     n = 30
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     @time calculating_vf!(m, vfmat, normit = true)
     # solve Qp
-    temp = zeros(m.nelem,1)
+    temp = zeros(m.no_elements,1)
     set_bc_part!(m, temp, 1:2, 400)
     set_bc_part!(m, temp, 3, 600)
     set_bc_part!(m, temp, 4:5, 400)
     # set_bc_part!(m, temp, 1:5, 600)
     set_bc_part!(m, temp, 6:10, 400)
-    epsilon = zeros(m.nelem,1)
+    epsilon = zeros(m.no_elements,1)
     set_bc_part!(m, epsilon, 1:10, 1.0)
     set_bc_part!(m, epsilon, 8, eps_lab)
     @time Qp, G = tempsolver(m, vfmat, temp, epsilon)
-    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.npar]
+    Qp_parts = [sum(Qp[m.elem2par[i].first:m.elem2par[i].last,1]) for i = 1:m.no_parts]
     # rect2_min = minimum(Qp[m.elem2par[6].first:m.elem2par[10].last,1])
     # rect2_max = maximum(Qp[m.elem2par[6].first:m.elem2par[10].last,1])
     # println("Qp of rect2 between :", rect2_min, " and ", rect2_max)
@@ -54,7 +48,7 @@ function fig_pinhole_therm2D_eps(eps_lab)
     fig = Figure(resolution = (270, 400), font = "Arial", fontsize = 10)
     ax = fig[1, 1] = Axis(fig)
     linewidth = 1.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "X in m"
     ax.ylabel = "Y in m"
     ax.aspect = DataAspect()
@@ -77,10 +71,10 @@ function fig_pinhole_therm2D_eps(eps_lab)
     # for i = 1:m.nnodes
     #     println(m.nodes[i].x, ";", m.nodes[i].y)
     # end
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(m.elem[i].node1, ";", m.elem[i].node2, ";", m.elem[i].com, ";", m.elem[i].nvec, ";", m.elem[i].area)
     # end
-    # for i = 1:m.nelem
+    # for i = 1:m.no_elements
     #     println(temp[i,:], ";", epsilon[i,:], ";", qp_area_kw_mod[i,:])
     # end
 end

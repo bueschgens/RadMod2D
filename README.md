@@ -16,7 +16,7 @@ In order to give credit to the RadMod2D contributors, we simply ask you to cite 
 
 RadMod2D is written in the [Julia programming language](https://julialang.org/).
 
-> _Tested with julia 1.6.1_
+> _Tested with julia 1.8.x
 
 > _All files should be run from within the project folder!_
 
@@ -59,10 +59,10 @@ m = model_rect_in_rect(r1x, r1y, r2x, r2y, elemsize)
 
 The view factors for the discretized geometry get calculated with:
 ```julia
-vfmat = zeros(Float64, m.nelem, m.nelem)
+vfmat = zeros(Float64, m.no_elements, m.no_elements)
 existing_vf!(m, vfmat)
 n = 15
-dx, dy = create_tiles(m, n)
+dx, dy = get_tile_dimensions(m, n)
 t_occ = check_tile_occupation(m, dx, dy, n)
 blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
 calculating_vf!(m, vfmat, normit = true)
@@ -70,10 +70,10 @@ calculating_vf!(m, vfmat, normit = true)
 
 Afterwards the heat flows per element Q can be calculated with the net radiation method:
 ```julia
-epsilon = zeros(m.nelem,1) # emissivities for elements
+epsilon = zeros(m.no_elements,1) # emissivities for elements
 set_bc_part!(m, epsilon, 1, 0.3)
 set_bc_part!(m, epsilon, 2, 0.6)
-temp = zeros(m.nelem,1) # temperature boundary conditions per element
+temp = zeros(m.no_elements,1) # temperature boundary conditions per element
 set_bc_part!(m, temp, 1:2, 300)
 temp[79:106,1] .= 600 # temp bc for specific elements
 Q, G = tempsolver(m, vfmat, temp, epsilon)
@@ -87,3 +87,9 @@ q = Q[:] ./ area[:]
 <img src="img/fig_rect_in_rect_q2D.png" alt="heat-flux-density" width="400"/>
 
 The plots are made with a plotting toolbox available at `test/plot2D.jl`. The examples are presented in in `test/run_example2.jl`.
+
+## TODOS
+- Make test models 
+- Compile time optimization
+- Reduce compile time of basic package by moving plotting to separate module RadMod2DPlotting
+- Add validations test with analytical formulas and random values to test against.

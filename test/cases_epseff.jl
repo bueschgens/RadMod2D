@@ -4,16 +4,10 @@ includes
 
 using DelimitedFiles
 
-# using GLMakie
-using CairoMakie
-# CairoMakie.activate!(type = "svg")
-# filetype = ".svg"
-CairoMakie.activate!(type = "png")
-filetype = ".png"
 
 include("./epseff2D.jl")
 include("./models2D.jl")
-include("./plot2D.jl")
+
 
 #= ######################################################
 inside functions
@@ -27,9 +21,9 @@ function setup_legend(leg)
     leg.padding = (3.0f0, 3.0f0, 1.0f0, 1.0f0) # default: (10.0f0, 10.0f0, 8.0f0, 8.0f0)
 end
 
-function setup_axis_epseff(ax)
+function setup_axis!_epseff(ax)
     linewidth = 2.0
-    setup_axis(ax, linewidth)
+    setup_axis!(ax, linewidth)
     ax.xlabel = "epsilon"
     ax.ylabel = "epsilon effective"
     ax.aspect = DataAspect()
@@ -44,7 +38,7 @@ function plot_epseff(case, val, filename)
     # 2D plot
     fig = Figure(resolution = (300, 300), font = "Arial", fontsize = 12)
     ax = fig[1, 1] = Axis(fig)
-    linewidth = setup_axis_epseff(ax)
+    linewidth = setup_axis!_epseff(ax)
     # colors = [:red, :green, :blue, :orange, :cyan, :purple1]
     # colors = to_colormap(:rainbow, size(case,1))
     colors = to_colormap(:Dark2_8, size(case,1))
@@ -60,9 +54,9 @@ function plot_epseff(case, val, filename)
 end
 
 function calc_vfmat(m; n = 30)
-    vfmat = zeros(Float64, m.nelem, m.nelem)
+    vfmat = zeros(Float64, m.no_elements, m.no_elements)
     existing_vf!(m, vfmat)
-    dx, dy = create_tiles(m, n)
+    dx, dy = get_tile_dimensions(m, n)
     @time t_occ = check_tile_occupation(m, dx, dy, n)
     @time blocking_vf_with_tiles!(m, vfmat, dx, dy, n, t_occ)
     calculating_vf!(m, vfmat, normit = true)
@@ -74,7 +68,7 @@ function plot_cases(case, m, arr, filename; lim = (nothing, nothing), refcase = 
     for i = 1:size(case,1)
         ax = fig[arr[i,1], arr[i,2]] = Axis(fig)
         linewidth = 2.0
-        setup_axis(ax, linewidth)
+        setup_axis!(ax, linewidth)
         ax.title = "phi = $(case[i,1])"
         ax.xlabel = "X in m"
         ax.ylabel = "Y in m"
@@ -121,7 +115,7 @@ function epsilon_effective_round_groove()
     epsilon_ink = 0.01
     eps_eff = Matrix{Float64}(undef,round(Integer,1.0/epsilon_ink),2*size(case,1))
     for i = 1:size(case,1)
-        m = model_circle_with_opening_line(2.0, 360, round(Integer,case[i,2]))
+        m = model_circle_with_opening_line_centered(2.0, 360, round(Integer,case[i,2]))
         vfmat = calc_vfmat(m)
         eps_eff_t = get_epsilon_effective(m, vfmat, 2, epsilon_ink = epsilon_ink)
         eps_eff[:,(2*i-1)] = eps_eff_t[:,1]
@@ -239,7 +233,7 @@ function plot_epseff_round_groove()
             0.9999 357.19] # cant calculate phi = 1.0
     m = Vector{Model}(undef,size(case,1))
     for i = 1:size(case,1)
-        m[i] = model_circle_with_opening_line(2.0, 360, round(Integer,case[i,2]))
+        m[i] = model_circle_with_opening_line_centered(2.0, 360, round(Integer,case[i,2]))
     end
     arr = set_arrangement(size(case,1), col = 2)
     plot_cases(case, m, arr, "fig_plot_round_groove")
