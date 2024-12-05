@@ -605,3 +605,45 @@ function model_line_to_line_with_obstacles(a, b, c, n, elemsize)
     println("model has ", mi.nelem, " elements")
     return mi
 end
+
+function model_reku(d, l, w, nrl, nrq, lt, qt, elemsize1, elemsize2)
+    # circles in rectangle
+    # d rohr
+    # l kanallaenge
+    # w kanalbreite
+    # nrl rohranzahl laengs in l-dir
+    # nrq rohranzahl quer in w-dir
+    # lt laengsteilung
+    # qt querteilung
+    # rectangle
+    m = create_empty_model()
+    seedx = round(Integer,l/elemsize1)
+    seedy = round(Integer,w/elemsize1)
+    add!(m, edge(Point2D(0.0,0.0), Point2D(0.0,w), seed = seedy, dir = "neg"))
+    add!(m, edge(Point2D(0.0,w), Point2D(l,w), seed = seedx, dir = "neg"))
+    add!(m, edge(Point2D(l,w), Point2D(l,0.0), seed = seedy, dir = "neg"))
+    add!(m, edge(Point2D(l,0.0), Point2D(0.0,0.0), seed = seedx, dir = "neg"))
+    # circles
+    seedcir = round(Integer,(pi*d)/elemsize2)
+    pos = Matrix{Point2D}(undef,nrq,nrl)
+    x0 = 0.6 * l
+    y0 = (w - ((nrq-1)*qt)) / 2
+    x = x0
+    y = y0
+    for j = 1:nrl
+        for i = 1:nrq
+            pos[i,j] = Point2D(x, y)
+            y += qt
+        end
+        x += lt
+        y = y0
+    end
+    for i = 1:nrq, j = 1:nrl
+        add!(m, circle(d, pos[i,j], seed = seedcir, dir = "neg"))
+    end
+    offset_model!(m)
+    mi = make_model_immutable(m)
+    println("model has ", mi.nelem, " elements")
+    return mi
+
+end
